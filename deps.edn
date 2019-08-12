@@ -1,1 +1,1 @@
-{:paths ["src"]}
+{:paths ["src" "test"]}
