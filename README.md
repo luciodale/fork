@@ -123,7 +123,7 @@ If some parts look a bit obscure, the following detailed explanation will get ri
 
 #### The Flow
 
-After clicking the submit button, the interceptor `(fork/on-submit :form)` sets `submitting?` to true, increases the `:submit-count`, and removes any `:external-errors` coming for example from a previously failed http request. Remember to pass `:form` to the incerceptor function, and make sure that it matches the `:path` value you have given to *Fork*. At this stage, your event is executed and the only detail to remember is to set `:submitting?` to false when the form life cycle is completed. You can choose to handle the global state with your own functions or rely on some helpers like `fork/set-submitting`. It's really up to you.
+After clicking the submit button, the interceptor `(fork/on-submit :form)` sets `submitting?` to true, increases the `:submit-count`, and removes any `:external-errors` coming for example from a previously failed http request. Remember to pass `:form` to the interceptor function, and make sure that it matches the `:path` value you have given to *Fork*. At this stage, your event is executed and the only detail to remember is to set `:submitting?` to false when the form life cycle is completed. You can choose to handle the global state with your own functions or rely on some helpers like `fork/set-submitting`. It's really up to you.
 
 You probably want to know more than the same old *Hello World* demonstration. Hence, I have prepared a REAL example that includes a server request and shows better what *Fork* can do for you.
 
@@ -367,6 +367,14 @@ Use the state directly only if you really know what you are doing, as it is the 
 
 Certainly not, *Fork* gives you some pre-built inputs, yet you are condemning yourself to the Bulma CSS framework if you ever choose to go down that route. Creating your own wrappers would work much better, allowing you to retain full control on the style. Having said that, these are the few components that ship with *Fork*.
 
+### Bulma CDN
+
+The quickest way to get Bulma is to require the CSS in the header of your index.html file:
+
+```
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.5/css/bulma.min.css"/>
+```
+
 ### Input
 
 ```clojure
@@ -530,5 +538,6 @@ We have added a function that generates our vector of vectors when evaluated. No
 
 As you can notice, you have to pass the error keys you used in your validation to both the `input-array-errors` and `delete` functions. You have to do this manual work because *Fork* leaves you with the choice to pick your own keys, thus knowing nothing about them.
 
+## Can I go make my forms now?
 
 Yes you can. This documentation should get you started with *Fork* the right way so that you can be productive with it. Ideas, comments (good or bad), and suggestions are always welcome!
