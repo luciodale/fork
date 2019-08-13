@@ -261,10 +261,13 @@
   (rf/->interceptor
    :id :on-submit
    :before (fn [context]
-             (-> context
-                 (assoc-in [:coeffects :db path :submitting?] true)
-                 (update-in [:coeffects :db path :submit-count] inc)
-                 (update-in [:coeffects :db path] dissoc :external-errors)))))
+             (update-in context
+                        [:coeffects :db]
+                        (fn [db]
+                          (-> db
+                              (assoc-in [path :submitting?] true)
+                              (update-in [path :submit-count] inc)
+                              (update path dissoc :external-errors)))))))
 
 (defn clean
   "Clean form state or a list of specified keys from reframe db."
