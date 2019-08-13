@@ -127,11 +127,11 @@
   (apply disj current-set ks))
 
 (defn local-disable
-  [{state :state} & ks]
+  [{state :state} & [ks]]
   (swap! state update :disabled? #(disable-logic % ks)))
 
 (defn local-enable
-  [{state :state} & ks]
+  [{state :state} & [ks]]
   (swap! state update :disabled? #(enable-logic % ks)))
 
 (defn global-disable
@@ -214,7 +214,7 @@
                         (cond
                           (> (- new-num old-num) 1) (reduced (+ old-num 1))
                           (= new-num max-num) (+ max-num 1)
-                          :else new-num)) -1
+                          :else new-num)) 0
                       sorted-idxs)]
              (assoc input-map idx
                     (get-in initial-values [input-array-key 0]))))))

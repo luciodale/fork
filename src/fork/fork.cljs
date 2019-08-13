@@ -30,8 +30,8 @@
             :submitting? (:submitting? db)
             :submit-count (:submit-count db)
             :set-values #(logic/set-values % props)
-            :disable #(logic/local-disable props %)
-            :enable #(logic/local-enable props %)
+            :disable (fn [& ks] (logic/local-disable props ks))
+            :enable (fn [& ks] (logic/local-enable props ks))
             :disabled? #(logic/disabled? (:disabled? @state) (:disabled? db) %)
             :handle-change #(logic/handle-change % props)
             :handle-blur #(logic/handle-blur % props)
@@ -91,7 +91,7 @@
                  (logic/add-to-input-array
                   props name))
                :delete
-               (fn [evt idx err-ks]
+               (fn [evt idx & [err-ks]]
                  (.preventDefault evt)
                  (logic/delete-from-input-array
                   props name idx err-ks))}) args])
