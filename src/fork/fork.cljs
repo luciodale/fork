@@ -13,7 +13,7 @@
         (when (:clean-on-unmount? props)
           (rf/dispatch [::logic/clean (:path props)])))
       :reagent-render
-      (fn [props components]
+      (fn [props component]
         (let [props (merge props {:state state
                                   :validation (or (:validation props)
                                                   (constantly nil))})
