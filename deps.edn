@@ -1,1 +1,3 @@
-{:paths ["src" "test"]}
+{:paths ["src"]
+ :aliases
+ {:dev {:extra-paths ["test"]}}}
