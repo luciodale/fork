@@ -2,7 +2,7 @@
   (:require
    [re-frame.core :as rf]))
 
-(defn- element-value
+(defn element-value
   [evt]
   (let [type (-> evt .-target .-type)]
     (case type
@@ -20,7 +20,7 @@
                   errors
                   external-errors)))))
 
-(defn- generate-error-map
+(defn generate-error-map
   "Transform the validation evaluated function
   into the errors format in the state."
   [resolved-validation]
@@ -34,7 +34,7 @@
                      vec-validation)))
            (vals resolved-validation))))
 
-(defn- filter-validation
+(defn filter-validation
   [resolved-validation keys-seq]
   (into {}
         (filter (fn [[validation-key _]]
@@ -42,7 +42,7 @@
                       (some #(= validation-key %) keys-seq)))
                 resolved-validation)))
 
-(defn- validation->error-map
+(defn validation->error-map
   "Filter the validation based on the inputs
   triggering it. Keywords are kept, as they
   are used for general errors."
@@ -95,7 +95,7 @@
                           validation-on-submit)]
     (validation->error-map whole-validation)))
 
-(defn- gen-error-map
+(defn gen-error-map
   "Dispatch to right validation function based on the event
   triggering the validation."
   ([{:keys [state validation]}]
@@ -118,11 +118,11 @@
                                      (gen-error-map props :on-blur new-values)
                                      (gen-error-map props :on-change new-values))))))
 
-(defn- disable-logic
+(defn disable-logic
   [current-set ks]
   (apply conj ((fnil into #{}) current-set) ks))
 
-(defn- enable-logic
+(defn enable-logic
   [current-set ks]
   (apply disj current-set ks))
 
