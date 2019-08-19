@@ -241,7 +241,6 @@
                    (take (count input-names)
                          (repeat true))))))
 
-
 (defn handle-submit
   [evt {:keys [state on-submit validation
                prevent-default? initial-values]
