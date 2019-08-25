@@ -1,7 +1,7 @@
 (ns fork.test.logic
   (:require
    [fork.logic :as logic]
-   [cljs.test :refer-macros [deftest is testing run-tests]]))
+   [cljs.test :refer-macros [deftest is testing]]))
 
 (defn evt [name value]
   (clj->js  {"target" {"name" name
@@ -145,5 +145,3 @@
                  {"list"
                   [[false :k "msg"]]}}})}
             "list" 0)))))
-
-(run-tests)
