@@ -3,7 +3,7 @@
   <groupId>fork</groupId>
   <artifactId>fork</artifactId>
   <packaging>jar</packaging>
-  <version>0.1.0</version>
+  <version>0.1.1</version>
   <name>fork</name>
   <description>Reagent &amp; Re-Frame form library</description>
   <url>https://github.com/luciodale/fork</url>
@@ -16,7 +16,7 @@
     <url>https://github.com/luciodale/fork</url>
     <connection>scm:git:git://github.com/luciodale/fork.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/luciodale/fork.git</developerConnection>
-    <tag>eb285dcc1eaa4dca8eaaac0e54480cade8fdc840</tag>
+    <tag>e7bc9dc583b3cd2f7e28cca3a49253cf6f02fe0e</tag>
   </scm>
   <build>
     <sourceDirectory>src</sourceDirectory>
