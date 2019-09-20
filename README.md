@@ -381,6 +381,8 @@ The quickest way to get Bulma is to require the CSS in the header of your index.
 
 ```
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.5/css/bulma.min.css"/>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.9.0/css/all.min.css"/>
 ```
 
 ### Input
@@ -416,6 +418,28 @@ To get all the props from your anonymous function in one shot, you can add :as p
 ```
 
 If you pass a component to `:text` such as `[:div "Some text"]`, add the `display: inline;` style to the element.
+
+### Dropdowns
+
+```clojure
+[fork/pretty-dropdown props
+ {:label "Optional Label"
+  :name "pretty-dropdown"
+  :options {"key-1" 1
+            "key-2" 2
+            "key-3" 3}
+  :class "Optional Css Class"}]
+```
+
+```clojure
+[fork/dropdown props
+ {:label "Optional Label"
+  :name "pretty-dropdown"
+  :options {"key-1" 1
+            "key-2" 2
+            "key-3" 3}
+  :class "Optional Css Class"}]
+```
 
 ## More funky stuff
 

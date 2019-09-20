@@ -150,7 +150,7 @@
   "Update values and validate in one swap. If validation
   is not provided the :errors key will take an empty map."
   [evt {:keys [state validation] :as props}]
-  (let [input-key (-> evt .-target .-name)
+  (let [input-key (-> evt .-target (.getAttribute "name"))
         input-value (element-value evt)
         new-values {input-key input-value}]
     (swap! state #(-> %

@@ -150,3 +150,96 @@
      (for [[k msg] (get errors name)]
        ^{:key k}
        [:p.help msg]))])
+
+(defn- dropdown-inner
+  [active? ref
+   {:keys [values errors handle-change
+           handle-blur]}
+   {:keys [label name options class]}]
+  [:div.field
+   [:label.label label]
+   [:div.dropdown
+    {:class (str (when active? "is-active")
+                 " " class)
+     :ref ref}
+    [:div.dropdown-trigger
+     [:div.button
+      {:aria-haspopup "true"
+       :aria-controls (str "dropdown-" name)}
+      [:span
+       (or
+        (get options (values name))
+        (values name))]
+      [:span.icon.is-small
+       [:i.fas.fa-angle-down
+        {:aria-hidden "true"}]]]]
+    [:div.dropdown-menu
+     {:id (str "dropdown-" name)
+      :role "menu"}
+     [:div.dropdown-content
+      (for [[value option] options]
+        ^{:key value}
+        [:a.dropdown-item
+         [:option
+          {:name name
+           :value value
+           :on-click handle-change}
+          option]])]]]
+   (for [[k msg] (get errors name)]
+     ^{:key k}
+     [:p.help msg])])
+
+(defn pretty-dropdown
+  [props opts]
+  (let [!ref (atom nil)
+        active? (r/atom false)
+        handler (fn [e]
+                  (if (.contains @!ref (.-target e))
+                    (reset! active? (not @active?))
+                    (reset! active? false)))
+        ref-val (fn [el] (reset! !ref el))
+        options (into {}
+                      (map
+                       (fn [[k v]]
+                         (assoc {} (str k) v))
+                       (:options opts)))]
+    (r/create-class
+     {:display-name (str "dropdown-" name)
+      :component-did-mount
+      (fn []
+        (js/document.addEventListener
+         "mouseup" handler))
+      :component-will-unmount
+      (fn []
+        (js/document.removeEventListener
+         "mouseup" handler))
+      :reagent-render
+      (fn [props opts]
+        [dropdown-inner
+         @active? ref-val
+         props (merge opts
+                      {:options options})])})))
+
+(defn dropdown
+  [{:keys [values errors touched handle-change
+           handle-blur]}
+   {:keys [label name options class]}]
+  [:div.field
+   {:class class}
+   [:label.label label]
+   [:div.control
+    [:div.select
+     [:select
+      {:name name
+       :value (values name)
+       :on-change handle-change
+       :on-blur handle-blur}
+      (for [[value option] options]
+        ^{:key value}
+        [:option
+         {:value value}
+         option])]]]
+   (when (get touched name)
+     (for [[k msg] (get errors name)]
+       ^{:key k}
+       [:p.help msg]))])
