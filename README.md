@@ -29,14 +29,14 @@ As at this state you must be dying of curiosity, I will dive right into the code
 #### In Deps
 
 ```clojure
-fork {:mvn/version "0.1.0"}
+fork {:mvn/version "0.1.1"}
 ```
 
 or
 
 ```clojure
 fork {:git/url "https://github.com/luciodale/fork.git"
-      :sha "0c7dc0beed9f7e0a9112515f6eb058ae4f45c71f"}
+:sha "cc76b4fc16db8bfca671a685e19dadb58dd30813"}
  ```
 
 #### In Namespace
