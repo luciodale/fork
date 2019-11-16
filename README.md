@@ -6,9 +6,7 @@ Yet another Form Library to add to the list. Inspired by [Formik](https://github
 
 *For Reagent & Re-frame*
 
-
-![](https://clojars.org/fork/latest-version.svg)
-
+[![Clojars Project](https://img.shields.io/clojars/v/fork.svg)](https://clojars.org/fork)
 
 ## Why Fork?
 If there is anything certain about us developers, it is that sooner or later we will have to deal with forms. No way around it.
