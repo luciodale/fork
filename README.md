@@ -67,7 +67,7 @@ fork {:git/url "https://github.com/luciodale/fork.git"
 
 Notice that *Fork* takes only two parameters. The first one is a map of utilities you provide, and the second one is an anonymous function that returns your component. It is by destructuring the first and only param of the anonymous function that you get all the goodies straight from the API.
 
-Moving back to `:initial-values`, this key is always required to make *Fork* aware of all your form elements. If you don't need any initial values for your fields, you can safely use empty strings, just like in the snippet. Make sure to match the `:name` of your inputs with what you define in the `:initial-values` map to successfully link up the handlers. Do not use keywords for input names, as html casts them to strings anyways giving you `":input"`.
+Moving back to `:initial-values`, this key is always required to make *Fork* aware of all your form elements. If you don't need any initial values for your fields, you can safely use empty strings, just like in the above snippet. Make sure to match the `:name` of your inputs with what you define in the `:initial-values` map to successfully link up the handlers. Do not use keywords for input names, as html casts them to strings anyways giving you `":input"`.
 
 ### How do I submit a form?
 
@@ -226,7 +226,7 @@ Create a function that takes `values` as parameter and returns a map with the fo
   :on-submit {...}}}
 ```
 
-The required keys are `:client` and at least one among `:on-change`, `:on-blur`, and `:on-submit`, which all describe when the validation should take place. Use your existing input names such as `"input"` to link any eventual error to the respective fields in your form. Also, note that each input can have an indefined number of nested vectors to allow multiple validations with their own error messages.
+The required keys are `:client` and at least one among `:on-change`, `:on-blur`, and `:on-submit`, which all describe when the validation should take place. Use your existing input names such as `"input"` to link any eventual error to the respective fields in your form. Also, note that each input can have an undefined number of nested vectors to allow multiple validations with their own error messages.
 
 You might end up in a situation where your validation does not need to be bound to any particular input. In that case, you can use a keyword such as `:input-independent` to organize your "general" logic, which might involve for example the sum of multiple inputs being equal to a specific value.
 
