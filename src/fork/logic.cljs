@@ -83,7 +83,7 @@
                initial-values validation form-id]}]
   (when prevent-default? (.preventDefault evt))
   (on-submit-state-updates state form-id)
-  (when (every? empty? validation)
+  (when (nil? validation)
     (on-submit
      {:values (:values @state)
       :dirty? (not= (:values @state) initial-values)})))
