@@ -4,9 +4,12 @@
    [reagent.core :as r]
    [re-frame.core :as rf]))
 
-(defn fork
+(defn form
   [props component]
-  (let [state (r/atom {:values (:initial-values props)})
+  (let [state (r/atom {:values
+                       (or (:initial-values props)
+                           {})
+                       :touched #{}})
         form-id (or (:form-id props)
                     (str (gensym)))]
     (r/create-class
@@ -25,10 +28,12 @@
                               (logic/handle-validation @state props))})]
           [component
            {:state state
+            :db db
             :path (:path props)
             :form-id form-id
             :values (:values @state)
             :errors (:validation props)
+            :external-errors (:external-errors db)
             :touched (:touched @state)
             :submitting? (:submitting? db)
             :submit-count (:submit-count @state)

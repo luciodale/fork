@@ -15,9 +15,8 @@
   (swap! state
          #(-> %
               (update :values merge new-values)
-              (update :touched
-                      (fnil (fn [x y] (apply conj x y)) #{})
-                      (keys new-values)))))
+              (update :touched (fn [x y]
+                                 (apply conj x y)) (keys new-values)))))
 
 (defn disable-logic
   [current-set ks]
@@ -62,7 +61,7 @@
 (defn handle-blur
   [evt {:keys [state]}]
   (let [input-key (-> evt .-target .-name)]
-    (swap! state update :touched (fnil conj #{}) input-key)))
+    (swap! state update :touched conj input-key)))
 
 (defn on-submit-state-updates
   [state form-id]
@@ -74,7 +73,8 @@
     (swap! state
            #(-> %
                 (update :touched
-                        (fnil (fn [x y] (apply conj x y)) #{})
+                        (fn [x y]
+                          (apply conj x y))
                         input-names)
                 (update :submit-count inc)))))
 
