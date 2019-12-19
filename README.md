@@ -8,10 +8,10 @@ Yet another Form Library to add to the list. Inspired by [Formik](https://github
 
 [![Clojars Project](https://img.shields.io/clojars/v/fork.svg)](https://clojars.org/fork)
 
+<img src="https://s5.gifyu.com/images/a-2019-12-19_153050.gif" width="80%" />
+
 ## Why Fork?
 If there is anything certain about us developers, it is that sooner or later we will have to deal with forms. No way around it.
-
-One thing is when your project merely requires login, registration, and account page, but it's a whole different story when you need forms ALL OVER THE PLACE.
 
 **Fork** tries to establish a pattern by abstracting away the bits you have written over and over to shift your focus on the features implementation. The following points represent the pillars *Fork* was built upon:
 
@@ -29,14 +29,14 @@ As at this state you must be dying of curiosity, I will dive right into the code
 #### In Deps
 
 ```clojure
-fork {:mvn/version "0.1.1"}
+fork {:mvn/version "1.0.0"}
 ```
 
 or
 
 ```clojure
 fork {:git/url "https://github.com/luciodale/fork.git"
-:sha "cc76b4fc16db8bfca671a685e19dadb58dd30813"}
+:sha "last sha commit here"}
  ```
 
 #### In Namespace
@@ -44,15 +44,15 @@ fork {:git/url "https://github.com/luciodale/fork.git"
 ```clojure
 (ns your.namespace
   (:require
-   [fork.fork :as fork]))
+  [fork.core :as fork]))
 ```
 
 ### The Bare Minimum
 
 ```clojure
 (defn foo []
-  [fork/fork {:initial-values
-              {"input" ""}}
+  [fork/form {:initial-values
+              {"input" "hello"}}
    (fn [{:keys [values
                 handle-change
                 handle-blur]}]
@@ -67,14 +67,14 @@ fork {:git/url "https://github.com/luciodale/fork.git"
 
 Notice that *Fork* takes only two parameters. The first one is a map of utilities you provide, and the second one is an anonymous function that returns your component. It is by destructuring the first and only param of the anonymous function that you get all the goodies straight from the API.
 
-Moving back to `:initial-values`, this key is always required to make *Fork* aware of all your form elements. If you don't need any initial values for your fields, you can safely use empty strings, just like in the above snippet. Make sure to match the `:name` of your inputs with what you define in the `:initial-values` map to successfully link up the handlers. Do not use keywords for input names, as html casts them to strings anyways giving you `":input"`.
+Starting from `:initial-values`, this key might be provided to make *Fork* aware of any of your prefilled form values. Make sure to match the `:name` of your inputs with what you define in the `:initial-values` map to successfully link up the handlers. Do not use keywords for input names, as html casts them to strings anyways giving you `":input"`. If you don't need to set default values for your fields, you can discard this key.
 
 ### How do I submit a form?
 
 ```clojure
 (ns your.namespace
   (:require
-   [fork.fork :as fork]
+  [fork.core :as fork]
    [re-frame.core :as rf))
 
 (rf/reg-event-fx
@@ -85,28 +85,29 @@ Moving back to `:initial-values`, this key is always required to make *Fork* awa
    {:db (fork/set-submitting db :form false)}))
 
 (defn foo []
-  [fork/fork {:initial-values
-              {"input" ""}
-              :path :form
-              :prevent-default? true
-              :clean-on-unmount? true
+  [fork/form {:path :form
+              :form-id "id"
+              :prevent-default?
+	      :clean-on-unmount? true
               :on-submit #(rf/dispatch [:submit-handler %])}
-   (fn [{:keys [values
-                handle-change
-                handle-blur
-                submitting?
-                handle-submit]}]
-     [:form
-      {:on-submit handle-submit}
-      [:input
-       {:name "input"
-        :value (values "input")
-        :on-change handle-change
-        :on-blur handle-blur}]
-      [:button
-       {:type "submit"
-        :disabled submitting?}
-       "Submit Form"]])])
+    (fn [{:keys [values
+                 form-id
+                 handle-change
+                 handle-blur
+                 submitting?
+                 handle-submit]}]
+      [:form
+       {:id form-id
+        :on-submit handle-submit}
+       [:input
+        {:name "input"
+         :value (values "input")
+         :on-change handle-change
+         :on-blur handle-blur}]
+       [:button
+        {:type "submit"
+         :disabled submitting?}
+         "Submit Form"]])])
 ```
 
 Let's examine what has been added step by step:
@@ -121,6 +122,8 @@ If some parts look a bit obscure, the following detailed explanation will get ri
 
 #### Params
 
+`:form-id` makes fork aware of your form elements. If it is not specified, a random id will be generated and will be provided through the same `:form-id` key. It is mandatory to use it.
+
 `:path` lets you choose where to store your form global state in Re-frame.
 
 `:prevent-default?` does not automatically submit your form to the server.
@@ -131,7 +134,7 @@ If some parts look a bit obscure, the following detailed explanation will get ri
 
 #### The Flow
 
-After clicking the submit button, the interceptor `(fork/on-submit :form)` sets `submitting?` to true, increases the `:submit-count`, and removes any `:external-errors` coming for example from a previously failed http request. Remember to pass `:form` to the interceptor function, and make sure that it matches the `:path` value you have given to *Fork*. At this stage, your event is executed and the only detail to remember is to set `:submitting?` to false when the form life cycle is completed. You can choose to handle the global state with your own functions or rely on some helpers like `fork/set-submitting`. It's really up to you.
+After clicking the submit button, the interceptor `(fork/on-submit :form)` sets `submitting?` to true and removes any `:external-errors` coming for example from a previously failed http request. Remember to pass `:form` to the interceptor function, and make sure that it matches the `:path` value you have given to *Fork*. At this stage, your event is executed and the only detail to remember is to set `:submitting?` to false when the form life cycle is completed. You can choose to handle the global state with your own functions or rely on some helpers like `fork/set-submitting`. It's really up to you.
 
 You probably want to know more than the same old *Hello World* demonstration. Hence, I have prepared a REAL example that includes a server request and shows better what *Fork* can do for you.
 
@@ -140,7 +143,7 @@ You probably want to know more than the same old *Hello World* demonstration. He
   (:require
    [ajax.core :as ajax]
    [day8.re-frame.http-fx]
-   [fork.fork :as fork]
+   [fork.core :as fork]
    [re-frame.core :as rf))
 
 (rf/reg-event-fx
@@ -172,20 +175,21 @@ You probably want to know more than the same old *Hello World* demonstration. He
      :on-failure [:failure]}}))
 
 (defn foo []
-  [fork/fork {:initial-values
-              {"input" ""}
+  [fork/form {:form-id "id"
               :path :form
               :prevent-default? true
               :clean-on-unmount? true
               :on-submit #(rf/dispatch [:submit-handler %])}
    (fn [{:keys [values
-                errors
+                form-id
+                external-errors
                 handle-change
                 handle-blur
                 submitting?
                 handle-submit]}]
      [:form
-      {:on-submit handle-submit}
+      {:id form-id
+       :on-submit handle-submit}
       [:input
        {:name "input"
         :value (values "input")
@@ -195,7 +199,7 @@ You probably want to know more than the same old *Hello World* demonstration. He
        {:type "submit"
         :disabled submitting?}
        "Submit Form"]
-      (when-let [msg (:error-500 errors)]
+      (when-let [msg (:error-500 external-errors)]
         [:p msg])])])
 ```
 
@@ -207,142 +211,102 @@ A few things to keep in mind:
 
 ### Cool, but what about validation?
 
-Simply plug it in!
+Simply plug in any library of your choice that is side effect free, or build your custom validation.
 
-#### Define your validation
+#### More details
 
-Create a function that takes `values` as parameter and returns a map with the following structure:
+All you have to do is to pass a function that takes `values` as only parameter. The returned data will be accessible via the key `errors`, which can be destructured from the props.
 
-```
-{:client
- {:on-change
-  {"input" [[(your logic) :error-key-1 "first message"]
-            [(your logic) :error-key-2 "second message"]]
-   "another-input" [...]
-   :input-independent [[(i.e. sum of all inputs must be 100)
-                        :error-key "message"]
-                       [...]]}
-  :on-blur {...}
-  :on-submit {...}}}
-```
-
-The required keys are `:client` and at least one among `:on-change`, `:on-blur`, and `:on-submit`, which all describe when the validation should take place. Use your existing input names such as `"input"` to link any eventual error to the respective fields in your form. Also, note that each input can have an undefined number of nested vectors to allow multiple validations with their own error messages.
-
-You might end up in a situation where your validation does not need to be bound to any particular input. In that case, you can use a keyword such as `:input-independent` to organize your "general" logic, which might involve for example the sum of multiple inputs being equal to a specific value.
-
-Lastly, if you add multiple validations per input, be sure to name the error keywords differently to avoid overwriting the previous error with the latest one evaluated. For example, if `:error-key-1` and `:error-key-2` were named the same, only the last one would have ended up in the errors map.
-
-If you are questioning the purpose of the keywords, they are used to add the messages in the errors map to not resort on a string match approach. For example, when the first validation function for the `"input"` field returns false i.e. `(your logic)`, the errors map updates to:
+Let's now build some real validation for our *Fork* component using for example the [Vlad](https://github.com/logaan/vlad) library:
 
 ```clojure
-{:errors {"input" {:error-key-1 "first message"}}
+(def validation
+  (vlad/join (vlad/attr ["name"]
+                        (vlad/chain
+                         (vlad/present)
+                         (vlad/length-in 3 15)))
+             (vlad/attr ["password"]
+                        (vlad/chain
+                         (vlad/present)
+                         (vlad/length-over 7)))))
 ```
-
-Let's now build some real validation for our *Fork* component:
-
-```clojure
-(defn validation
-  [values]
-  {:client
-   {:on-change
-    {"input" [[(seq (values "input")) :error-1 "Can't be empty"]
-              [(> (count (values "input")) 3) :error-2 "Must be > 3"]]}}})
-```
-
-As you might have guessed, this check is simply making sure that the input is not empty and that there are at least 4 chars.
 
 #### Connect the wires
 
 Let's integrate the validation with our *Fork* component to actually display the errors:
 
 ```clojure
-(defn foo []
-  [fork/fork {:initial-values
-              {"input" ""}
-              :path :form
-              :prevent-default? true
-              :clear-on-unmount? true
-              :on-submit #(rf/dispatch [:submit-handler %])
-              :validation validation}
-   (fn [{:keys [values
-                errors
-                touched
-                state
-                handle-change
-                handle-blur
-                submitting?
-                handle-submit]}]
-     [:form
-      {:on-submit handle-submit}
-      [:input
-       {:name "input"
-        :value (values "input")
-        :on-change handle-change
-        :on-blur handle-blur}]
-      (when (get touched "input")
-          (for [[k msg] (get errors "input")]
-            ^{:key k}
-            [:p msg]))
-      [:button
-       {:type "submit"
-        :disabled submitting?}
-       "Submit Form"]
-      (when-let [msg (:error-500 errors)]
-        [:p msg])])])
+[fork/form {:path :form
+               :form-id "id"
+               :validation #(vlad/field-errors validation %)
+               :prevent-default? true
+               :clean-on-unmount? true
+               :on-submit #(rf/dispatch [:submit-handler %])}
+    (fn [{:keys [values
+                 form-id
+                 errors
+                 touched
+                 handle-change
+                 handle-blur
+                 submitting?
+                 handle-submit]}]
+      [:form
+       {:id form-id
+        :on-submit handle-submit}
+       [:input
+        {:name "name"
+         :value (values "name")
+         :on-change handle-change
+         :on-blur handle-blur}]
+       (when (touched "name")
+         [:div (first (get errors (list "name")))])
+       [:input
+        {:name "password"
+         :value (values "password")
+         :on-change handle-change
+         :on-blur handle-blur}]
+       (when (touched "password")
+         [:div (first (get errors (list "password")))])
+       [:button
+        {:type "submit"
+         :disabled submitting?}
+        "Submit Form"]])]
 ```
 
-Noticed anything new? We are simply passing the validation function along with a `:validation` key and destructuring `touched`. The latter comes in handy to improve the user experience in that the errors are not shown until the first `:on-blur` event is fired.
+Noticed anything new? We are simply passing the vlad validation function along with a `:validation` key and destructuring `touched`. The latter comes in handy to improve the user experience in that the errors are not shown until the first `:on-blur` event is fired.
 
-With the current logic in place, the form is always submitted regardless of the errors. To fix this, you might add a condition to disable the submit button, but I would advice to include some logic in the submit event:
-
-```clojure
-(rf/reg-event-fx
- :submit-handler
- [(fork/on-submit :form)]
- (fn [{db :db} [_ {:keys [values errors]}]]
-   (if errors
-     {:db (fork/set-submitting db :form false)}
-     {:db db
-      :http-xhrio
-      {:method :post
-       :uri "/submit-form"
-       :params values
-       :timeout 2000
-       :format (ajax/transit-request-format)
-       :response-format (ajax/transit-response-format)
-       :on-success [:success]
-       :on-failure [:failure]}})))
-```
+When a validation function is provided, the submit button will do nothing until all errors are cleared. The only variable that does change is `submit-count`, which is incremented every time the `on-click` event is fired.
 
 ### Does Fork do anything else for me?
 
 You bet it does. The keys you can currently access from your anonymous function are:
 
 ```clojure
-(fn [{:keys [state
-             values
-             errors
-             touched
-             submitting?
-             submit-count
-             set-values
-             disable
-             enable
-             disabled?
-             handle-change
-             handle-blur
-             handle-submit]}]
-
-  ...)
+(fn [{:keys
+      [db
+       state
+       values
+       form-id
+       errors
+       external-errors
+       touched
+       submitting?
+       submit-count
+       set-values
+       disable
+       enable
+       disabled?
+       handle-change
+       handle-blur
+       handle-submit]}])
 ```
-
-If you need more, don't hesitate to open a PR. Contributions and improvements are more than welcome!
-
 #### Quick overview
 
 Here is a demonstration on how to use the above handlers that have not been mentioned so far:
 
 ```clojure
+;; db is simply the dereferenced re-frame state that fork uses for external matters
+
 (swap! state assoc :something :new)
 
 (set-values {"input" "new-value"})
@@ -360,11 +324,9 @@ Here is a demonstration on how to use the above handlers that have not been ment
 
 ;; input component
 [:input
- {:name "input"
-  :value (values "input")
-  :on-change handle-change
-  :on-blur handle-blur
-  :disabled (disabled? "input")}]
+{...
+ :disabled (disabled? "input")
+ ...}]
 ```
 
 #### State Warning
@@ -440,135 +402,6 @@ If you pass a component to `:text` such as `[:div "Some text"]`, add the `displa
             "key-3" 3}
   :class "Optional Css Class"}]
 ```
-
-## More funky stuff
-
-*Fork* has an API to ease the development of input arrays, which are those inputs that can be dynamically generated or deleted via clicking on buttons available in the UI. Before anything else, initiate an input array in your `:initial-values` with a key value pair like the following:
-
-```clojure
-:initial-values {"input-array" {0 {"foo" ""
-                                   "bar" ""}}}
-```
-
-### Input Array
-
-```clojure
-[fork/input-array props
- {:name "input-array"
-  :component your-component
-  :args "Passed as second argument in your-component function"]
-
-```
-
-Let's see what `your-component` function could look like:
-
-```clojure
-(defn your-component
-  [{:keys [values
-           handle-change
-           handle-blur
-           array-key
-           add
-           delete]} _]
-  [:div
-   (for [[idx value] (get values array-key)]
-     ^{:key idx}
-     [:div
-      [:div
-       [:label "Foo"]
-       [:input
-        {:name "foo"
-         :value (value "foo")
-         :on-change #(handle-change % idx)
-         :on-blur #(handle-blur % idx)}]]
-      [:div
-       [:label "Bar"]
-       [:input
-        {:name "bar"
-         :value (value "bar")
-         :on-change #(handle-change % idx)
-         :on-blur #(handle-blur % idx)}]]
-      [:button
-       {:on-click #(delete % idx)}
-       "Remove"]])
-   [:button
-    {:on-click add}
-    "Add"]])
-```
-
-### How do I validate an input array?
-
-Great question! With the help of some extra functions, you can keep your code tidy and clean.
-
-Do you remember the validation function? Let's get back to it:
-
-```clojure
-(defn validation [values]
-  {:client
-   {:on-change
-    {"input-array"
-     (apply concat
-            (map
-             (fn [[idx {:strs [foo bar]}]]
-               [[(not (empty? foo)) (str "foo" idx) "Foo can't be empty"]
-                [(= "validate-more" foo) (str "foo-1" idx) "More on Foo"]
-                [(not (empty? bar)) (str "bar" idx) "Bar can't be empty"]])
-             (values "input-array")))}}})
-```
-
-We have added a function that generates our vector of vectors when evaluated. Note that you can have many checks also in this instance as long as you remember to pass the error keys in the component. Let's do it right now!
-
-```clojure
-(defn your-component
-  [{:keys [values
-           handle-change
-           handle-blur
-           array-key
-           add
-           delete
-           input-array-errors]}]
-  [:div
-   (for [[idx value] (get values array-key)]
-     ^{:key idx}
-     [:div
-      [:div
-       [:label "Foo"]
-       [:input
-        {:name "foo"
-         :value (value "foo")
-         :on-change #(handle-change % idx)
-         :on-blur #(handle-blur % idx)}]
-       (for [[k error]
-             (input-array-errors
-              idx "foo" [(str "foo" idx)
-                         (str "foo-1" idx)])]
-         ^{:key k}
-         [:div
-          [:p.help error]])]
-      [:div
-       [:label "Bar"]
-       [:input
-        {:name "bar"
-         :value (value "bar")
-         :on-change #(handle-change % idx)
-         :on-blur #(handle-blur % idx)}]
-       (for [[k error]
-             (input-array-errors
-              idx "bar" [(str "bar" idx)])]
-         ^{:key k}
-         [:div
-          [:p.help error]])]
-      [:button
-       {:on-click #(delete % idx [(str "foo" idx)
-                                  (str "foo-1" idx)
-                                  (str "bar" idx)])}
-       "Remove"]])
-   [:button
-    {:on-click add}
-    "Add"]])
-```
-
-As you can notice, you have to pass the error keys you used in your validation to both the `input-array-errors` and `delete` functions. You have to do this manual work because *Fork* leaves you with the choice to pick your own keys, thus knowing nothing about them.
 
 ## Can I go make my forms now?
 
