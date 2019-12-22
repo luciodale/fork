@@ -195,7 +195,7 @@
     [:div.select
      [:select
       {:name name
-       :value (values name)
+       :value (values name "")
        :on-change handle-change
        :on-blur handle-blur
        :disabled (disabled? name)}
