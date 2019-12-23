@@ -292,6 +292,7 @@ You bet it does. The keys you can currently access from your anonymous function 
        errors
        external-errors
        touched
+       set-touched
        submitting?
        submit-count
        set-values
