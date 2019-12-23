@@ -35,6 +35,7 @@
             :errors (:validation props)
             :external-errors (:external-errors db)
             :touched (:touched @state)
+            :set-touched #(logic/set-touched % props)
             :submitting? (:submitting? db)
             :submit-count (:submit-count @state)
             :set-values #(logic/set-values % props)
