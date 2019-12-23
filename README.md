@@ -389,9 +389,9 @@ If you pass a component to `:text` such as `[:div "Some text"]`, add the `displa
 [fork/pretty-dropdown props
  {:label "Optional Label"
   :name "pretty-dropdown"
-  :options {"key-1" 1
-            "key-2" 2
-            "key-3" 3}
+  :options [{"key-1" 1}
+            {"key-2" 2}
+            {"key-3" 3}]
   :class "Optional Css Class"}]
 ```
 
@@ -399,9 +399,9 @@ If you pass a component to `:text` such as `[:div "Some text"]`, add the `displa
 [fork/dropdown props
  {:label "Optional Label"
   :name "pretty-dropdown"
-  :options {"key-1" 1
-            "key-2" 2
-            "key-3" 3}
+  :options [{"key-1" 1}
+            {"key-2" 2}
+            {"key-3" 3}]
   :class "Optional Css Class"}]
 ```
 

@@ -124,7 +124,7 @@
 (defn- dropdown-inner
   [active? ref
    {:keys [values handle-change handle-blur]}
-   {:keys [label name options class]}]
+   {:keys [label name names options class]}]
   [:div.field
    [:label.label label]
    [:div.dropdown
@@ -135,10 +135,7 @@
      [:div.button
       {:aria-haspopup "true"
        :aria-controls (str "dropdown-" name)}
-      [:span
-       (or
-        (get options (values name))
-        (values name))]
+      [:span (get names (values name))]
       [:span.icon.is-small
        [:i.fas.fa-angle-down
         {:aria-hidden "true"}]]]]
@@ -146,14 +143,14 @@
      {:id (str "dropdown-" name)
       :role "menu"}
      [:div.dropdown-content
-      (for [[value option] options]
-        ^{:key value}
+      (for [option options]
+        ^{:key (ffirst option)}
         [:a.dropdown-item
          [:option
           {:name name
-           :value value
+           :value (ffirst option)
            :on-click handle-change}
-          option]])]]]])
+          (first (vals option))]])]]]])
 
 (defn pretty-dropdown
   [props opts]
@@ -164,11 +161,7 @@
                     (reset! active? (not @active?))
                     (reset! active? false)))
         ref-val (fn [el] (reset! !ref el))
-        options (into {}
-                      (map
-                       (fn [[k v]]
-                         (assoc {} (str k) v))
-                       (:options opts)))]
+        names (into {} (:options opts))]
     (r/create-class
      {:display-name (str "dropdown-" name)
       :component-did-mount
@@ -183,8 +176,7 @@
       (fn [props opts]
         [dropdown-inner
          @active? ref-val
-         props (merge opts
-                      {:options options})])})))
+         props (merge opts {:names names})])})))
 
 (defn dropdown
   [{:keys [values touched handle-change handle-blur disabled?]}
@@ -200,8 +192,8 @@
        :on-change handle-change
        :on-blur handle-blur
        :disabled (disabled? name)}
-      (for [[value option] options]
-        ^{:key value}
+      (for [option options]
+        ^{:key (ffirst option)}
         [:option
-         {:value value}
-         option])]]]])
+         {:value (ffirst option)}
+         (first (vals option))])]]]])
