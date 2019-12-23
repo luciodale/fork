@@ -312,6 +312,8 @@ Here is a demonstration on how to use the above handlers that have not been ment
 
 (swap! state assoc :something :new)
 
+(set-touched ["input" "another-input"])
+
 (set-values {"input" "new-value"})
 
 (set-values {"input" "new-value"
