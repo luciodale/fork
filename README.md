@@ -31,7 +31,7 @@ As at this state you must be dying of curiosity, I will dive right into the code
 #### In Deps
 
 ```clojure
-fork {:mvn/version "1.0.1"}
+fork {:mvn/version "1.0.2"}
 ```
 
 or

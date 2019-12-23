@@ -18,3 +18,10 @@ All notable changes to this project will be documented in this file.
 ### Removed
 - Built-in validation
 - Array input support
+
+## [1.0.2]
+### Added
+- `set-touched` handler
+
+### Changed
+- Bulma dropdowns take a list of maps as options rather than a map
