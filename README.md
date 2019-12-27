@@ -89,7 +89,7 @@ Starting from `:initial-values`, this key might be provided to make *Fork* aware
 (defn foo []
   [fork/form {:path :form
               :form-id "id"
-              :prevent-default?
+              :prevent-default? true
 	      :clean-on-unmount? true
               :on-submit #(rf/dispatch [:submit-handler %])}
     (fn [{:keys [values
