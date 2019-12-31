@@ -31,7 +31,7 @@ As at this state you must be dying of curiosity, I will dive right into the code
 #### In Deps
 
 ```clojure
-fork {:mvn/version "1.0.2"}
+fork {:mvn/version "1.0.3"}
 ```
 
 or
@@ -52,24 +52,58 @@ fork {:git/url "https://github.com/luciodale/fork.git"
 ### The Bare Minimum
 
 ```clojure
+(defn my-form
+  [{:keys [values handle-change handle-blur]}]
+  [:div
+   [:p "Read back: " (values "input")]
+   [:input
+    {:name "input"
+     :value (values "input")
+     :on-change handle-change
+     :on-blur handle-blur}]])
+
 (defn foo []
   [fork/form {:initial-values
               {"input" "hello"}}
-   (fn [{:keys [values
-                handle-change
-                handle-blur]}]
-     [:div
-      [:p "Read back: " (values "input")]
-      [:input
-       {:name "input"
-        :value (values "input")
-        :on-change handle-change
-        :on-blur handle-blur}]])])
-```
+   my-form])
+ ```
 
-Notice that *Fork* takes only two parameters. The first one is a map of utilities you provide, and the second one is an anonymous function that returns your component. It is by destructuring the first and only param of the anonymous function that you get all the goodies straight from the API.
+Notice that *Fork* takes only two parameters. The first one is a map of utilities you provide, and the second one is a function that returns your component. It is by destructuring the first and only param of the form function that you get all the goodies straight from the API.
 
 Starting from `:initial-values`, this key might be provided to make *Fork* aware of any of your prefilled form values. Make sure to match the `:name` of your inputs with what you define in the `:initial-values` map to successfully link up the handlers. Do not use keywords for input names, as html casts them to strings anyways giving you `":input"`. If you don't need to set default values for your fields, you can discard this key.
+
+### Can I go anonymous?
+
+You can also return your component in an anonymous function, but you have to be careful not to cause unwanted re-renderings by updating any external state. The following code is an example of what you want to avoid, when using an anonymous function:
+
+```clojure
+;; Bad code
+(defn foo []
+  (let [external-input (r/atom nil)]
+    (fn []
+      [:div
+       [:input
+        {:value @external-input
+         :on-change #(reset! external-input
+                             (-> % .-target .-value))}]
+       [fork/form {}
+        (fn [{:keys [values
+                     form-id
+                     handle-change
+                     handle-blur] :as props}]
+          [:form
+           {:id form-id}
+           [:input
+            {:name "name"
+             :value (values "name")
+             :on-change #(do (reset! external-input "some-value")
+                             (handle-change %))
+             :on-blur handle-blur}]])]])))
+```
+
+Briefly, the `"name"` input will lose focus every time its `:on-change` event is dispatched. This happens because the handler creates a new value for the `external-input` state, which sparks the re-rendering of the whole `foo` component.
+
+As a solution, you might keep the anonymous function in place, but use the `foo` component exclusively for the logic related to `fork/form`.
 
 ### How do I submit a form?
 
@@ -281,27 +315,28 @@ When a validation function is provided, the submit button will do nothing until 
 
 ### Does Fork do anything else for me?
 
-You bet it does. The keys you can currently access from your anonymous function are:
+You bet it does. The keys you can currently access from your form function are:
 
 ```clojure
-(fn [{:keys
-      [db
-       state
-       values
-       form-id
-       errors
-       external-errors
-       touched
-       set-touched
-       submitting?
-       submit-count
-       set-values
-       disable
-       enable
-       disabled?
-       handle-change
-       handle-blur
-       handle-submit]}])
+[{:keys
+  [db
+   props
+   state
+   values
+   form-id
+   errors
+   external-errors
+   touched
+   set-touched
+   submitting?
+   submit-count
+   set-values
+   disable
+   enable
+   disabled?
+   handle-change
+   handle-blur
+   handle-submit]}]
 ```
 #### Quick overview
 
@@ -334,6 +369,21 @@ Here is a demonstration on how to use the above handlers that have not been ment
  ...}]
 ```
 
+For what concerns the `:props` key, you can use it as a way of passing arguments to the form component. Here is a quick example:
+
+```clojure
+(defn my-form
+  [{:keys [props ...]}]
+  ;; props accessible in here!
+  ...
+  )
+
+(defn foo []
+  [fork/form {:props {:arg1 "foo" :arg2 "bar"}
+              ...}
+   my-form])
+```
+
 #### State Warning
 
 Use the state directly only if you really know what you are doing, as it is the ratom that manages the whole form. You might find it useful to deref and print the ratom in your console for debugging reasons.
@@ -363,7 +413,7 @@ The quickest way to get Bulma is to require the CSS in the header of your index.
   :class "your-css-class"}]
 ```
 
-To get all the props from your anonymous function in one shot, you can add :as props just like this: `{:keys [values ..] :as props}`
+To get all the props from your form function in one shot, you can add :as props just like this: `{:keys [values ..] :as props}`
 
 ### Text Area
 
