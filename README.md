@@ -103,7 +103,7 @@ You can also return your component in an anonymous function, but you have to be 
 
 Briefly, the `"name"` input will lose focus every time its `:on-change` event is dispatched. This happens because the handler creates a new value for the `external-input` state, which sparks the re-rendering of the whole `foo` component.
 
-As a solution, you might keep the anonymous function in place, but use the `foo` component exclusively for the logic related to `fork/form`.
+As a solution, you might keep the anonymous function in place as long as you remember to use the `foo` component exclusively for the logic related to `fork/form`. This approach will be adopted in the next snippets for readability purposes.
 
 ### How do I submit a form?
 
