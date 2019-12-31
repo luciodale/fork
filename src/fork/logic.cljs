@@ -84,14 +84,38 @@
                 (update :submit-count inc)))))
 
 (defn handle-submit
-  [evt {:keys [state on-submit prevent-default?
+  [evt {:keys [state db on-submit prevent-default?
                initial-values validation form-id]}]
   (when prevent-default? (.preventDefault evt))
   (on-submit-state-updates state form-id)
-  (when (nil? validation)
+  (when (and (nil? validation) (every? #(nil? (:waiting? %))
+                                       (vals (:server db))))
     (on-submit
      {:values (:values @state)
       :dirty? (not= (:values @state) initial-values)})))
+
+(rf/reg-event-db
+ ::server-set-waiting
+ (fn [db [_ path input-key]]
+   (assoc-in db [path :server input-key :waiting?] true)))
+
+(defn send-server-request
+  [evt http-fn {:keys [state path debounce]}]
+  (let [input-key (-> evt .-target (.getAttribute "name"))
+        input-value (element-value evt)
+        new-values (merge
+                    (:values @state)
+                    {input-key input-value})]
+    (if debounce
+      (do
+        (js/clearTimeout (get-in @state [:debounce input-key]))
+        (rf/dispatch [::server-set-waiting path input-key])
+        (swap! state update-in [:debounce input-key]
+               (fn [] (js/setTimeout
+                       #(http-fn new-values) debounce))))
+      (do
+        (rf/dispatch [::server-set-waiting path input-key])
+        (http-fn new-values)))))
 
 (defn on-submit
   "Set global variables in reframe db when submitting."
@@ -130,6 +154,10 @@
 (defn set-submitting
   [db path bool]
   (assoc-in db [path :submitting?] bool))
+
+(defn set-waiting
+  [db path input-name bool]
+  (assoc-in db [path :server input-name :waiting?] bool))
 
 (defn set-external-errors
   [db path errors-map]

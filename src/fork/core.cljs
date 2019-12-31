@@ -46,7 +46,10 @@
                                          (:disabled? db) %)
             :handle-change #(logic/handle-change % props)
             :handle-blur #(logic/handle-blur % props)
-            :handle-submit #(logic/handle-submit % props)}]))})))
+            :handle-submit #(logic/handle-submit % (merge props {:db db}))
+            :send-server-request (fn [e f & [opt]]
+                                   (logic/send-server-request
+                                    e f (merge opt props)))}]))})))
 
 ;; ---- Re-frame utils that can be easily extended to provide more functionality ---- ;;
 
@@ -71,6 +74,10 @@
 (defn set-submitting
   [db path bool]
   (logic/set-submitting db path bool))
+
+(defn set-waiting
+  [db path input-name bool]
+  (logic/set-waiting db path input-name bool))
 
 (defn set-external-errors
   [db path errors-map]
