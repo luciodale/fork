@@ -27,7 +27,8 @@
                             (when (:validation props)
                               (logic/handle-validation @state props))})]
           [component
-           {:state state
+           {:props (:props props)
+            :state state
             :db db
             :path (:path props)
             :form-id form-id
