@@ -25,3 +25,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - Bulma dropdowns take a list of maps as options rather than a map
+
+## [1.1.0]
+### Added
+- `send-server-request` handler
