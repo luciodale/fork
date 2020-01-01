@@ -83,16 +83,29 @@
                         input-names)
                 (update :submit-count inc)))))
 
+(defn dirty?
+  [values initial-values]
+  (cond
+    (and (seq values) (seq initial-values))
+    (every? false?
+            (mapv
+             (fn [[k v]]
+               (= v (or (get initial-values k) "")))
+             values))
+    (seq values) (some? (some not-empty (vals values)))
+    (and (empty? values) (empty? initial-values)) false
+    :else true))
+
 (defn handle-submit
   [evt {:keys [state db on-submit prevent-default?
                initial-values validation form-id]}]
   (when prevent-default? (.preventDefault evt))
   (on-submit-state-updates state form-id)
-  (when (and (nil? validation) (every? #(nil? (:waiting? %))
+  (when (and (nil? validation) (every? #(false? (:waiting? %))
                                        (vals (:server db))))
     (on-submit
      {:values (:values @state)
-      :dirty? (not= (:values @state) initial-values)})))
+      :dirty? (dirty? (:values @state) initial-values)})))
 
 (rf/reg-event-db
  ::server-set-waiting
