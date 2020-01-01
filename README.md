@@ -313,6 +313,62 @@ Noticed anything new? We are simply passing the vlad validation function along w
 
 When a validation function is provided, the submit button will do nothing until all errors are cleared. The only variable that does change is `submit-count`, which is incremented every time the `on-click` event is fired.
 
+### Dealing with server requests
+
+Since version `1.1.0`, the handler `send-server-request` provides a way of performing server side validation `:on-blur` or `:on-change`, or any other operation that involves your backend code. Here is an example of how it works:
+
+```clojure
+(rf/reg-event-fx
+ :server-request
+ (fn [_ [_ form-values]]
+   ;; faking a server request
+   {:dispatch-later [{:ms 200 :dispatch [:response form-values]}]}))
+
+(rf/reg-event-fx
+ :response
+ (fn [{db :db} [_ form-values]]
+   ;; so that the form can be submitted
+   {:db (fork/set-waiting db :form "email" false)}))
+
+(defn foo []
+  [fork/form {:path :form
+              :prevent-default? true
+              :on-submit #(js/alert %)}
+   (fn [{:keys [form-id
+                values
+                handle-change
+                handle-blur
+                handle-submit
+                send-server-request]}]
+     [:div
+      [:form
+       {:id form-id
+        :on-submit handle-submit}
+       [:input
+        {:name "email"
+         :value (values "email")
+         :on-blur handle-blur
+         :on-change (fn [evt]
+                      (handle-change evt)
+                      (send-server-request evt
+                                           #(rf/dispatch [:server-request %])
+                                           ;; optional
+                                           {:debounce 500}))}]
+       [:button
+         {:type "submit"}
+        "Submit"]]])])
+```
+
+After destructuring `send-server-request`, this function is invoked within the `:on-change` handler. It takes either two or three parameters being:
+
+- An event - *Required*
+
+- A function that performs the server request, taking the updated values as argument - *Required*
+
+- An optional map (only the `:debounce` key is supported ATM)
+
+To prevent the form submission while waiting for a server response, a `:waiting? true` key value pair is stored in the Re-frame state and needs to be set to false after the server logic is resolved. You can do this yourself or use `(fork/set-waiting db :form "email" false)`, as showed above. Now, the form can be submitted.
+
 ### Does Fork do anything else for me?
 
 You bet it does. The keys you can currently access from your form function are:
@@ -336,7 +392,8 @@ You bet it does. The keys you can currently access from your form function are:
    disabled?
    handle-change
    handle-blur
-   handle-submit]}]
+   handle-submit
+   send-server-request]}]
 ```
 #### Quick overview
 
