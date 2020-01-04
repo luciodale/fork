@@ -31,7 +31,7 @@ As at this state you must be dying of curiosity, I will dive right into the code
 #### In Deps
 
 ```clojure
-fork {:mvn/version "1.1.0"}
+fork {:mvn/version "1.2.0"}
 ```
 
 or
@@ -158,15 +158,21 @@ If some parts look a bit obscure, the following detailed explanation will get ri
 
 #### Params
 
-`:form-id` makes fork aware of your form elements. If it is not specified, a random id will be generated and will be provided through the same `:form-id` key. It is mandatory to use it.
+`:form-id` makes fork aware of your form elements. If it is not specified, a random id will be generated and will be provided through the same `:form-id` key. It is mandatory to use it
 
-`:path` lets you choose where to store your form global state in Re-frame.
+`:path` lets you choose where to store your form global state in Re-frame
 
-`:prevent-default?` does not automatically submit your form to the server.
+`:prevent-default?` does not automatically submit your form to the server
 
-`:clean-on-unmount?` resets the global state when your component is unmounted.
+`:clean-on-unmount?` resets the global state when your component is unmounted
 
-`:on-submit` lets you write your own submit logic in a Re-frame event.
+`:initial-values` to pre-populate the inputs
+
+`:initial-touched` to pre-populate the inputs and set them as touched
+
+`:on-submit` lets you write your own submit logic in a Re-frame event
+
+`:component-did-mount` to perform any logic after the component is mounted. It takes a function and provides one argument that consists of a map of handlers: `set-touched, set-untouched, set-values, disable, enable, disabled?, handle-change, handle-blur, send-server-request`
 
 #### The Flow
 
