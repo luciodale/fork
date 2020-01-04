@@ -118,16 +118,14 @@
         new-values (merge
                     (:values @state)
                     {input-key input-value})]
+    (rf/dispatch [::server-set-waiting path input-key])
     (if debounce
       (do
         (js/clearTimeout (get-in @state [:debounce input-key]))
-        (rf/dispatch [::server-set-waiting path input-key])
         (swap! state update-in [:debounce input-key]
                (fn [] (js/setTimeout
                        #(http-fn new-values) debounce))))
-      (do
-        (rf/dispatch [::server-set-waiting path input-key])
-        (http-fn new-values)))))
+      (http-fn new-values))))
 
 (defn on-submit
   "Set global variables in reframe db when submitting."
