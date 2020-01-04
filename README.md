@@ -166,6 +166,8 @@ If some parts look a bit obscure, the following detailed explanation will get ri
 
 `:clean-on-unmount?` resets the global state when your component is unmounted
 
+`:validation` to pass a validation function that takes the values as only param
+
 `:initial-values` to pre-populate the inputs
 
 `:initial-touched` to pre-populate the inputs and set them as touched
