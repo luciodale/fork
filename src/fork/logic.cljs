@@ -11,7 +11,7 @@
       (-> evt .-target .-value))))
 
 (defn set-values
-  [new-values {:keys [state] :as props}]
+  [new-values state]
   (swap! state
          #(-> %
               (update :values merge new-values)
@@ -19,12 +19,12 @@
                                  (apply conj x y)) (keys new-values)))))
 
 (defn set-touched
-  [names {:keys [state]}]
+  [names state]
   (swap! state update :touched
          (fn [x y] (apply conj x y)) names))
 
 (defn set-untouched
-  [names {:keys [state]}]
+  [names state]
   (swap! state update :touched
          (fn [x y] (apply disj x y)) names))
 
@@ -37,39 +37,31 @@
   (apply disj current-set ks))
 
 (defn local-disable
-  [{state :state} & [ks]]
+  [state & [ks]]
   (swap! state update :disabled? #(disable-logic % ks)))
 
 (defn local-enable
-  [{state :state} & [ks]]
+  [state & [ks]]
   (swap! state update :disabled? #(enable-logic % ks)))
 
-(defn global-disable
-  [db path & [ks]]
-  (update-in db [path :disabled?] #(disable-logic % ks)))
-
-(defn global-enable
-  [db path & [ks]]
-  (update-in db [path :disabled?] #(enable-logic % ks)))
-
 (defn disabled?
-  [local global k]
-  (get (clojure.set/union local global) k))
+  [state k]
+  (get (:disabled? @state) k))
 
 (defn handle-validation
-  [state {:keys [validation]}]
+  [state validation]
   (let [values (:values state)
         resolved (validation values)]
     (when-not (every? empty? resolved) resolved)))
 
 (defn handle-change
-  [evt {:keys [state] :as props}]
+  [evt state]
   (let [input-key (-> evt .-target (.getAttribute "name"))
         input-value (element-value evt)]
     (swap! state update :values assoc input-key input-value)))
 
 (defn handle-blur
-  [evt {:keys [state]}]
+  [evt state]
   (let [input-key (-> evt .-target .-name)]
     (swap! state update :touched conj input-key)))
 
@@ -103,14 +95,16 @@
 
 (defn handle-submit
   [evt {:keys [state db on-submit prevent-default?
-               initial-values validation form-id]}]
+               initial-values touched-values
+               validation form-id]}]
   (when prevent-default? (.preventDefault evt))
   (on-submit-state-updates state form-id)
   (when (and (nil? validation) (every? #(false? (:waiting? %))
                                        (vals (:server db))))
     (on-submit
      {:values (:values @state)
-      :dirty? (dirty? (:values @state) initial-values)})))
+      :dirty? (dirty? (:values @state) (merge initial-values
+                                              touched-values))})))
 
 (rf/reg-event-db
  ::server-set-waiting

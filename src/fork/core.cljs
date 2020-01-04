@@ -12,21 +12,32 @@
                        :touched (into #{}
                                       (keys (:initial-touched props)))})
         form-id (or (:form-id props)
-                    (str (gensym)))]
+                    (str (gensym)))
+        handlers {:set-touched (fn [& ks] (logic/set-touched ks state))
+                  :set-untouched (fn [& ks] (logic/set-untouched ks state))
+                  :set-values #(logic/set-values % state)
+                  :disable (fn [& ks] (logic/local-disable state ks))
+                  :enable (fn [& ks] (logic/local-enable state ks))
+                  :disabled? #(logic/disabled? state %)
+                  :handle-change #(logic/handle-change % state)
+                  :handle-blur #(logic/handle-blur % state)
+                  :send-server-request (fn [e f & [opt]]
+                                         (logic/send-server-request
+                                          e f (merge opt
+                                                     {:state state
+                                                      :path (:path props)})))}]
     (r/create-class
-     {:component-will-unmount
+     {:component-did-mount
+      #((:component-did-mount props) handlers)
+      :component-will-unmount
       (fn []
         (when (:clean-on-unmount? props)
           (rf/dispatch [::logic/clean (:path props)])))
       :reagent-render
       (fn [props component]
         (let [db @(rf/subscribe [::logic/db (:path props)])
-              props (merge props
-                           {:state state
-                            :form-id form-id
-                            :validation
-                            (when (:validation props)
-                              (logic/handle-validation @state props))})]
+              validation (when-let [val-fn (:validation props)]
+                           (logic/handle-validation @state val-fn))]
           [component
            {:props (:props props)
             :state state
@@ -37,21 +48,22 @@
             :errors (:validation props)
             :external-errors (:external-errors db)
             :touched (:touched @state)
-            :set-touched (fn [& ks] (logic/set-touched ks props))
-            :set-untouched (fn [& ks] (logic/set-untouched ks props))
+            :set-touched (:set-touched handlers)
+            :set-untouched (:set-untouched handlers)
             :submitting? (:submitting? db)
             :submit-count (:submit-count @state)
-            :set-values #(logic/set-values % props)
-            :disable (fn [& ks] (logic/local-disable props ks))
-            :enable (fn [& ks] (logic/local-enable props ks))
-            :disabled? #(logic/disabled? (:disabled? @state)
-                                         (:disabled? db) %)
-            :handle-change #(logic/handle-change % props)
-            :handle-blur #(logic/handle-blur % props)
-            :handle-submit #(logic/handle-submit % (merge props {:db db}))
-            :send-server-request (fn [e f & [opt]]
-                                   (logic/send-server-request
-                                    e f (merge opt props)))}]))})))
+            :set-values (:set-values handlers)
+            :disable (:disable handlers)
+            :enable (:enable handlers)
+            :disabled? (:disabled? handlers)
+            :handle-change (:handle-change handlers)
+            :handle-blur (:handle-blur handlers)
+            :send-server-request (:send-server-request handlers)
+            :handle-submit #(logic/handle-submit % (merge props
+                                                          {:state state
+                                                           :db db
+                                                           :form-id form-id
+                                                           :validation validation}))}]))})))
 
 ;; ---- Re-frame utils that can be easily extended to provide more functionality ---- ;;
 
@@ -64,14 +76,6 @@
   "Interceptor that can be chained to clean the whole re-frame form state or parts of it."
   [path & sub-path]
   (logic/clean path sub-path))
-
-(defn disable
-  [db path & ks]
-  (logic/global-disable db path ks))
-
-(defn enable
-  [db path & ks]
-  (logic/global-enable db path ks))
 
 (defn set-submitting
   [db path bool]
