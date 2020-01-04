@@ -29,3 +29,14 @@ All notable changes to this project will be documented in this file.
 ## [1.1.0]
 ### Added
 - `send-server-request` handler
+
+## [1.2.0]
+### Added
+- `component-did-mount` handler
+- `initial-touched` handler
+
+### Changed
+- `set-touched` args should not be wrapped in a sequence.
+
+### Removed
+- enable disable re-frame handlers
