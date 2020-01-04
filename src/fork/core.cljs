@@ -6,10 +6,11 @@
 
 (defn form
   [props component]
-  (let [state (r/atom {:values
-                       (or (:initial-values props)
-                           {})
-                       :touched #{}})
+  (let [state (r/atom {:values (or (merge (:initial-values props)
+                                          (:initial-touched props))
+                                   {})
+                       :touched (into #{}
+                                      (keys (:initial-touched props)))})
         form-id (or (:form-id props)
                     (str (gensym)))]
     (r/create-class
