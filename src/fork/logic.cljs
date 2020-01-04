@@ -23,6 +23,11 @@
   (swap! state update :touched
          (fn [x y] (apply conj x y)) names))
 
+(defn set-untouched
+  [names {:keys [state]}]
+  (swap! state update :touched
+         (fn [x y] (apply disj x y)) names))
+
 (defn disable-logic
   [current-set ks]
   (apply conj ((fnil into #{}) current-set) ks))
