@@ -28,7 +28,8 @@
                                                       :path (:path props)})))}]
     (r/create-class
      {:component-did-mount
-      #((:component-did-mount props) handlers)
+      #(when-let [on-mount (:component-did-mount props)]
+         (on-mount handlers))
       :component-will-unmount
       (fn []
         (when (:clean-on-unmount? props)
