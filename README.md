@@ -230,7 +230,6 @@ You probably want to know more than the same old *Hello World* demonstration. He
               :on-submit #(rf/dispatch [:submit-handler %])}
    (fn [{:keys [values
                 form-id
-                external-errors
                 handle-change
                 handle-blur
                 submitting?
@@ -417,7 +416,7 @@ You bet it does. The keys you can currently access from your form function are:
 Here is a demonstration on how to use the above handlers that have not been mentioned so far:
 
 ```clojure
-;; db is simply the dereferenced re-frame state that fork uses for external matters
+;; db is simply the dereferenced re-frame state that fork uses for global logic
 
 (swap! state assoc :something :new)
 
