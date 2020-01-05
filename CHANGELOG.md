@@ -40,3 +40,11 @@ All notable changes to this project will be documented in this file.
 
 ### Removed
 - enable disable re-frame handlers
+
+## [1.2.2]
+### Added
+- `on-submit-response` handler
+- `set-status-code` re-frame handler
+
+### Removed
+- set-external-errors
