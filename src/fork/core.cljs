@@ -37,7 +37,8 @@
       (fn [props component]
         (let [db @(rf/subscribe [::logic/db (:path props)])
               validation (when-let [val-fn (:validation props)]
-                           (logic/handle-validation @state val-fn))]
+                           (logic/handle-validation @state val-fn))
+              on-submit-response (get (:on-submit-response props) (:status-code db))]
           [component
            {:props (:props props)
             :state state
@@ -46,7 +47,7 @@
             :form-id form-id
             :values (:values @state)
             :errors validation
-            :external-errors (:external-errors db)
+            :on-submit-response on-submit-response
             :touched (:touched @state)
             :set-touched (:set-touched handlers)
             :set-untouched (:set-untouched handlers)
@@ -85,9 +86,9 @@
   [db path input-name bool]
   (logic/set-waiting db path input-name bool))
 
-(defn set-external-errors
-  [db path errors-map]
-  (logic/set-external-errors db path errors-map))
+(defn set-status-code
+  [db path status-code]
+  (logic/set-status-code db path status-code))
 
 ;; ---- Input templates using Bulma CSS Framework ---- ;;
 

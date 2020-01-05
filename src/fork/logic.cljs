@@ -133,12 +133,8 @@
   (rf/->interceptor
    :id :on-submit
    :before (fn [context]
-             (update-in context
-                        [:coeffects :db]
-                        (fn [db]
-                          (-> db
-                              (assoc-in [path :submitting?] true)
-                              (update path dissoc :external-errors)))))))
+             (update-in context [:coeffects :db]
+                        #(assoc-in % [path :submitting?] true)))))
 
 (defn clean
   "Clean form state or a list of specified keys from reframe db."
@@ -169,6 +165,6 @@
   [db path input-name bool]
   (assoc-in db [path :server input-name :waiting?] bool))
 
-(defn set-external-errors
-  [db path errors-map]
-  (update-in db [path :external-errors] merge errors-map))
+(defn set-status-code
+  [db path status-code]
+  (assoc-in db [path :status-code] status-code))
