@@ -31,7 +31,7 @@ As at this state you must be dying of curiosity, I will dive right into the code
 #### In Deps
 
 ```clojure
-fork {:mvn/version "1.2.1"}
+fork {:mvn/version "1.2.2"}
 ```
 
 or
@@ -124,7 +124,7 @@ As a solution, you might keep the anonymous function in place as long as you rem
   [fork/form {:path :form
               :form-id "id"
               :prevent-default? true
-	      :clean-on-unmount? true
+              :clean-on-unmount? true
               :on-submit #(rf/dispatch [:submit-handler %])}
     (fn [{:keys [values
                  form-id
@@ -174,11 +174,13 @@ If some parts look a bit obscure, the following detailed explanation will get ri
 
 `:on-submit` lets you write your own submit logic in a Re-frame event
 
+`:on-submit-response` to provide a map of server messages based on status codes
+
 `:component-did-mount` to perform any logic after the component is mounted. It takes a function and provides one argument that consists of a map of handlers: `set-touched, set-untouched, set-values, disable, enable, disabled?, handle-change, handle-blur, send-server-request`
 
 #### The Flow
 
-After clicking the submit button, the interceptor `(fork/on-submit :form)` sets `submitting?` to true and removes any `:external-errors` coming for example from a previously failed http request. Remember to pass `:form` to the interceptor function, and make sure that it matches the `:path` value you have given to *Fork*. At this stage, your event is executed and the only detail to remember is to set `:submitting?` to false when the form life cycle is completed. You can choose to handle the global state with your own functions or rely on some helpers like `fork/set-submitting`. It's really up to you.
+After clicking the submit button, the interceptor `(fork/on-submit :form)` sets `submitting?` to true. Remember to pass `:form` to the interceptor function, and make sure that it matches the `:path` value you have given to *Fork*. At this stage, your event is executed and the only detail to remember is to set `:submitting?` to false when the form life cycle is completed. You can choose to handle the global state with your own functions or rely on some helpers like `fork/set-submitting`. It's really up to you.
 
 You probably want to know more than the same old *Hello World* demonstration. Hence, I have prepared a REAL example that includes a server request and shows better what *Fork* can do for you.
 
@@ -201,7 +203,7 @@ You probably want to know more than the same old *Hello World* demonstration. He
  (fn [{db :db} [_ result]]
    {:db (-> db
             (fork/set-submitting :form false)
-            (fork/set-external-errors :form {:error-500 "You got a 500!"}))}))
+            (fork/set-status-code :form 500))}))
 
 (rf/reg-event-fx
  :submit-handler
@@ -223,6 +225,8 @@ You probably want to know more than the same old *Hello World* demonstration. He
               :path :form
               :prevent-default? true
               :clean-on-unmount? true
+              :on-submit-response {400 "client error"
+                                   500 "server error"}
               :on-submit #(rf/dispatch [:submit-handler %])}
    (fn [{:keys [values
                 form-id
@@ -230,6 +234,7 @@ You probably want to know more than the same old *Hello World* demonstration. He
                 handle-change
                 handle-blur
                 submitting?
+                on-submit-response
                 handle-submit]}]
      [:form
       {:id form-id
@@ -243,15 +248,18 @@ You probably want to know more than the same old *Hello World* demonstration. He
        {:type "submit"
         :disabled submitting?}
        "Submit Form"]
-      (when-let [msg (:error-500 external-errors)]
-        [:p msg])])])
+      [:p on-submit-response]])])
 ```
 
 A few things to keep in mind:
 
-* Always return the db in you `:submit-handler` to not lose the interceptor updates i.e. `{:db db ...}`.
-* You might choose to use the `fork/clean` interceptor to clean the whole state or parts of it i.e. `(fork/clean :form :submitting?)`.
-* You don't really need to clean the state if your component is unmounted, as the `:clean-on-unmount?` option will take care of it.
+* Always return the db in you `:submit-handler` to not lose the interceptor updates i.e. `{:db db}`
+
+* Notice the usage of `fork/set-status-code` in the `:failure` handler. It makes sure that `on-submit-response` will get the right message out of the `:on-submit-response` map passed to _Fork_
+
+* You might choose to use the `fork/clean` interceptor to clean the whole state or parts of it i.e. `(fork/clean :form :submitting?)`
+
+* You don't really need to clean the state if your component is unmounted, as the `:clean-on-unmount?` option will take care of it
 
 ### Cool, but what about validation?
 
@@ -328,13 +336,13 @@ Since version `1.1.0`, the handler `send-server-request` provides a way of perfo
 ```clojure
 (rf/reg-event-fx
  :server-request
- (fn [_ [_ form-values]]
+ (fn [_ [_ values]]
    ;; faking a server request
-   {:dispatch-later [{:ms 200 :dispatch [:response form-values]}]}))
+   {:dispatch-later [{:ms 200 :dispatch [:response values]}]}))
 
 (rf/reg-event-fx
  :response
- (fn [{db :db} [_ form-values]]
+ (fn [{db :db} [_ values]]
    ;; so that the form can be submitted
    {:db (fork/set-waiting db :form "email" false)}))
 
@@ -389,9 +397,9 @@ You bet it does. The keys you can currently access from your form function are:
    values
    form-id
    errors
-   external-errors
    touched
    set-touched
+   set-untouched
    submitting?
    submit-count
    set-values
@@ -401,6 +409,7 @@ You bet it does. The keys you can currently access from your form function are:
    handle-change
    handle-blur
    handle-submit
+   on-submit-response
    send-server-request]}]
 ```
 #### Quick overview
@@ -413,6 +422,8 @@ Here is a demonstration on how to use the above handlers that have not been ment
 (swap! state assoc :something :new)
 
 (set-touched "input" "another-input")
+
+(set-untouched "input" "another-input")
 
 (set-values {"input" "new-value"})
 
@@ -448,10 +459,6 @@ For what concerns the `:props` key, you can use it as a way of passing arguments
               ...}
    my-form])
 ```
-
-#### State Warning
-
-Use the state directly only if you really know what you are doing, as it is the ratom that manages the whole form. You might find it useful to deref and print the ratom in your console for debugging reasons.
 
 ## Do I really need to build all components from the ground up?
 
