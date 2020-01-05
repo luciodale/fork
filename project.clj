@@ -1,4 +1,4 @@
-(defproject fork "1.2.0"
+(defproject fork "1.2.1"
   :description "Reagent & Re-Frame form library"
   :url "https://github.com/luciodale/fork"
   :license {:name "MIT"}
