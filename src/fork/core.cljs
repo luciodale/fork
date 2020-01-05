@@ -45,7 +45,7 @@
             :path (:path props)
             :form-id form-id
             :values (:values @state)
-            :errors (:validation props)
+            :errors validation
             :external-errors (:external-errors db)
             :touched (:touched @state)
             :set-touched (:set-touched handlers)
