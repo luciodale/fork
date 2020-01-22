@@ -408,7 +408,7 @@ After destructuring `send-server-request`, this function is invoked within the `
 
 - An event - *Required*
 
-- A function that performs the server request, taking the updated values as argument - *Required*
+- A function that performs the server request, taking the up to date values as argument - *Required*
 
 - An optional map - `:debounce` and `:throttle` are both supported from `v1.2.4`
 
