@@ -252,7 +252,7 @@ You probably want to know more than the same old *Hello World* demonstration. He
 
 A few things to keep in mind:
 
-* Always return the db in you `:submit-handler` to not lose the interceptor updates i.e. `{:db db}`
+* Always return the db in your `:submit-handler` to not lose the interceptor updates i.e. `{:db db}`
 
 * Notice the usage of `fork/set-status-code` in the `:failure` handler. It makes sure that `on-submit-response` will get the right message out of the `:on-submit-response` map passed to _Fork_
 
