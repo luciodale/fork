@@ -328,6 +328,36 @@ Noticed anything new? We are simply passing the vlad validation function along w
 
 When a validation function is provided, the submit button will do nothing until all errors are cleared. The only variable that does change is `submit-count`, which is incremented every time the `on-click` event is fired.
 
+#### Little Vlad note:
+
+To perform `password` and `confirm-password` validation I recommend using the helper `vlad/equals-value`, as this really simplies your logic. Briefly, you can define your validation like the following snippet:
+
+```clojure
+(def form-validation
+  (fn [password]
+    (vlad/join
+     (vlad/attr ["password"]
+                (vlad/chain (vlad/present)
+                            (vlad/join (vlad/length-in 6 128))))
+     (vlad/attr ["confirm-password"]
+                (vlad/chain
+                 (vlad/equals-value
+                  password
+                  {:message "Confirm Password must be same as password"}))))))
+```
+
+and pass the password value when giving the function to *Fork* i.e.
+
+```clojure
+[fork/form {:validation
+            #(vlad/field-errors
+              ;; passing password to the function
+              (form-validation (get % "password"))
+              %)
+            ...}
+	    ...]
+```
+
 ### Dealing with server requests
 
 Since version `1.1.0`, the handler `send-server-request` provides a way of performing server side validation `:on-blur` or `:on-change`, or any other operation that involves your backend code. Here is an example of how it works:
