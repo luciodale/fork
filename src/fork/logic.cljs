@@ -112,19 +112,28 @@
    (assoc-in db [path :server input-key :waiting?] true)))
 
 (defn send-server-request
-  [evt http-fn {:keys [state path debounce]}]
+  [evt http-fn {:keys [state path debounce throttle]}]
   (let [input-key (-> evt .-target (.getAttribute "name"))
         input-value (element-value evt)
         new-values (merge
                     (:values @state)
                     {input-key input-value})]
     (rf/dispatch [::server-set-waiting path input-key])
-    (if debounce
-      (do
-        (js/clearTimeout (get-in @state [:debounce input-key]))
-        (swap! state update-in [:debounce input-key]
-               (fn [] (js/setTimeout
-                       #(http-fn new-values) debounce))))
+    (cond
+      debounce (do
+                 (js/clearTimeout (get-in @state [:debounce input-key]))
+                 (swap! state update-in [:debounce input-key]
+                        (fn [] (js/setTimeout
+                                #(http-fn new-values) debounce))))
+      throttle (when
+                   (not (get-in @state [:throttle input-key]))
+                 (swap! state update-in [:throttle input-key]
+                        (fn [] (js/setTimeout
+                                #(do
+                                   (http-fn new-values)
+                                   (swap! state update :throttle dissoc input-key))
+                                throttle))))
+      :else
       (http-fn new-values))))
 
 (defn on-submit
