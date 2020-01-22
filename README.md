@@ -31,14 +31,14 @@ As at this state you must be dying of curiosity, I will dive right into the code
 #### In Deps
 
 ```clojure
-fork {:mvn/version "1.2.3"}
+fork {:mvn/version "1.2.4"}
 ```
 
 or
 
 ```clojure
 fork {:git/url "https://github.com/luciodale/fork.git"
-:sha "last sha commit here"}
+      :sha "sha commit"}
  ```
 
 #### In Namespace
@@ -410,7 +410,7 @@ After destructuring `send-server-request`, this function is invoked within the `
 
 - A function that performs the server request, taking the updated values as argument - *Required*
 
-- An optional map (only the `:debounce` key is supported ATM)
+- An optional map - `:debounce` and `:throttle` are both supported from `v1.2.4`
 
 To prevent the form submission while waiting for a server response, a `:waiting? true` key value pair is stored in the Re-frame state and needs to be set to false after the server logic is resolved. You can do this yourself or use `(fork/set-waiting db :form "email" false)`, as showed above. Now, the form can be submitted.
 

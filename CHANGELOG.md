@@ -48,3 +48,7 @@ All notable changes to this project will be documented in this file.
 
 ### Removed
 - set-external-errors
+
+## [1.2.4]
+### Added
+- `:throttle` option to `on-submit-response`
