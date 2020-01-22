@@ -330,7 +330,7 @@ When a validation function is provided, the submit button will do nothing until 
 
 #### Little Vlad note:
 
-To perform `password` and `confirm-password` validation I recommend using the helper `vlad/equals-value`, as this really simplies your logic. Briefly, you can define your validation like the following snippet:
+To perform `password` and `confirm-password` validation I recommend using the helper `vlad/equals-value`, as this really simplifies your logic. Briefly, you can define your validation like the following snippet:
 
 ```clojure
 (def form-validation
