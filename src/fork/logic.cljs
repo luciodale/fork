@@ -125,8 +125,7 @@
                  (swap! state update-in [:debounce input-key]
                         (fn [] (js/setTimeout
                                 #(http-fn new-values) debounce))))
-      throttle (when
-                   (not (get-in @state [:throttle input-key]))
+      throttle (when (not (get-in @state [:throttle input-key]))
                  (swap! state update-in [:throttle input-key]
                         (fn [] (js/setTimeout
                                 #(do
