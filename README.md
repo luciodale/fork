@@ -31,7 +31,7 @@ As at this state you must be dying of curiosity, I will dive right into the code
 #### In Deps
 
 ```clojure
-fork {:mvn/version "1.2.4"}
+fork {:mvn/version "1.2.5"}
 ```
 
 or
@@ -423,6 +423,7 @@ You bet it does. The keys you can currently access from your form function are:
   [db
    props
    state
+   reset
    values
    form-id
    errors
@@ -449,6 +450,13 @@ Here is a demonstration on how to use the above handlers that have not been ment
 ;; db is simply the dereferenced re-frame state that fork uses for global logic
 
 (swap! state assoc :something :new)
+
+;; to remove full state
+(reset)
+
+;; to reset state to given map
+(reset {:values {"name" "John"}
+        :touched #{"name"}})
 
 (set-touched "input" "another-input")
 

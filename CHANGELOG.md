@@ -52,3 +52,7 @@ All notable changes to this project will be documented in this file.
 ## [1.2.4]
 ### Added
 - `:throttle` option to `on-submit-response`
+
+## [1.2.5]
+### Added
+- `reset` handler to props

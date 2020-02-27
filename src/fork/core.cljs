@@ -25,7 +25,10 @@
                                          (logic/send-server-request
                                           e f (merge opt
                                                      {:state state
-                                                      :path (:path props)})))}]
+                                                      :path (:path props)})))
+                  :reset (fn [& [m]] (reset! state (merge {:values {}
+                                                           :touched #{}}
+                                                          m)))}]
     (r/create-class
      {:component-did-mount
       #(when-let [on-mount (:component-did-mount props)]
@@ -61,6 +64,7 @@
             :handle-change (:handle-change handlers)
             :handle-blur (:handle-blur handlers)
             :send-server-request (:send-server-request handlers)
+            :reset (:reset handlers)
             :handle-submit #(logic/handle-submit % (merge props
                                                           {:state state
                                                            :db db
