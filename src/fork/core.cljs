@@ -5,7 +5,7 @@
    [re-frame.core :as rf]))
 
 (defn form
-  [props component]
+  [props _]
   (let [state (r/atom {:values (or (merge (:initial-values props)
                                           (:initial-touched props))
                                    {})
@@ -98,7 +98,7 @@
 ;; ---- Input templates using Bulma CSS Framework ---- ;;
 
 (defn input
-  [{:keys [values touched handle-change handle-blur disabled?]}
+  [{:keys [values handle-change handle-blur disabled?]}
    {:keys [label placeholder name type class]}]
   [:div.field {:class class}
    [:label.label label]
@@ -113,7 +113,7 @@
       :on-blur handle-blur}]]])
 
 (defn textarea
-  [{:keys [values touched handle-change handle-blur disabled?]}
+  [{:keys [values handle-change handle-blur disabled?]}
    {:keys [label placeholder name class]}]
   [:div.field {:class class}
    [:label.label label]
@@ -127,7 +127,7 @@
       :on-blur handle-blur}]]])
 
 (defn checkbox
-  [{:keys [values touched handle-change handle-blur disabled?]}
+  [{:keys [values handle-change handle-blur disabled?]}
    {:keys [name class text]}]
   [:div.field {:class class}
    [:div.control
@@ -143,13 +143,12 @@
 
 (defn- dropdown-inner
   [active? ref
-   {:keys [values handle-change handle-blur]}
+   {:keys [values handle-change]}
    {:keys [label name names options class]}]
   [:div.field
    [:label.label label]
    [:div.dropdown
-    {:class (str (when active? "is-active")
-                 " " class)
+    {:class (str (when active? "is-active") " " class)
      :ref ref}
     [:div.dropdown-trigger
      [:div.button
@@ -173,7 +172,8 @@
           (first (vals option))]])]]]])
 
 (defn pretty-dropdown
-  [props opts]
+
+  [_ opts]
   (let [!ref (atom nil)
         active? (r/atom false)
         handler (fn [e]
@@ -181,9 +181,10 @@
                     (reset! active? (not @active?))
                     (reset! active? false)))
         ref-val (fn [el] (reset! !ref el))
-        names (into {} (:options opts))]
+        names (into {} (:options opts))
+        display-name (:display-name opts)]
     (r/create-class
-     {:display-name (str "dropdown-" name)
+     {:display-name display-name
       :component-did-mount
       (fn []
         (js/document.addEventListener
@@ -199,7 +200,7 @@
          props (merge opts {:names names})])})))
 
 (defn dropdown
-  [{:keys [values touched handle-change handle-blur disabled?]}
+  [{:keys [values handle-change handle-blur disabled?]}
    {:keys [label name options class]}]
   [:div.field
    {:class class}
