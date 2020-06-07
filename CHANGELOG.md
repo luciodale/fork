@@ -56,3 +56,7 @@ All notable changes to this project will be documented in this file.
 ## [1.2.5]
 ### Added
 - `reset` handler to props
+
+## [1.2.6]
+### Changed
+- `dirty?` submit handler into `dirty`. Now, the variable returns either `nil` or a map of changed values.

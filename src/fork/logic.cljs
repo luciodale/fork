@@ -1,5 +1,6 @@
 (ns fork.logic
   (:require
+   [clojure.data :as data]
    [re-frame.core :as rf]))
 
 (defn element-value
@@ -80,18 +81,9 @@
                         input-names)
                 (update :submit-count inc)))))
 
-(defn dirty?
+(defn dirty
   [values initial-values]
-  (cond
-    (and (seq values) (seq initial-values))
-    (every? false?
-            (mapv
-             (fn [[k v]]
-               (= v (or (get initial-values k) "")))
-             values))
-    (seq values) (some? (some not-empty (vals values)))
-    (and (empty? values) (empty? initial-values)) false
-    :else true))
+  (first (data/diff values (or initial-values {}))))
 
 (defn handle-submit
   [evt {:keys [state db on-submit prevent-default?
@@ -103,8 +95,8 @@
                                        (vals (:server db))))
     (on-submit
      {:values (:values @state)
-      :dirty? (dirty? (:values @state) (merge initial-values
-                                              touched-values))})))
+      :dirty (dirty (:values @state) (merge initial-values
+                                            touched-values))})))
 
 (rf/reg-event-db
  ::server-set-waiting
