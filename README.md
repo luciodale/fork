@@ -116,7 +116,9 @@ As a solution, you might keep the anonymous function in place as long as you rem
 (rf/reg-event-fx
  :submit-handler
  [(fork/on-submit :form)]
- (fn [{db :db} [_ {:keys [values]}]]
+ (fn [{db :db} [_ {:keys [values dirty]}]]
+   ;; dirty tells you whether the values have been touched before submitting.
+   ;; its possible values are nil or a map of changed values
    (js/alert values)
    {:db (fork/set-submitting db :form false)}))
 
