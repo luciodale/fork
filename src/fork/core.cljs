@@ -122,7 +122,7 @@
                {:state state
                 :set-waiting (fn [state input-name bool]
                                (set-waiting state path input-name bool))})]
-    (set-waiting-true input-key true)
+    (set-waiting-true input-key)
     (cond
       debounce (do
                  (js/clearTimeout (get-in @state [:debounce input-key]))

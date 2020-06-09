@@ -39,11 +39,11 @@
                                 {:state state
                                  :path path
                                  :set-waiting-true
-                                 (fn [input-name bool]
+                                 (fn [input-name]
                                    (swap! state #(core/set-waiting %
                                                                    path
                                                                    input-name
-                                                                   bool)))})))
+                                                                   true)))})))
                   :reset (fn [& [m]] (reset! state (merge {:values {}
                                                            :touched #{}}
                                                           m)))}]

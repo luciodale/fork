@@ -54,9 +54,9 @@
                                 {:state state
                                  :set-waiting core/set-waiting
                                  :set-waiting-true
-                                 (fn [input-name bool]
+                                 (fn [input-name]
                                    (rf/dispatch [::server-set-waiting
-                                                 (:path opts) input-name bool]))})))
+                                                 (:path opts) input-name true]))})))
                   :reset (fn [& [m]] (reset! state (merge {:values {}
                                                            :touched #{}}
                                                           m)))}]
