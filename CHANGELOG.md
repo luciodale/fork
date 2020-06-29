@@ -60,3 +60,12 @@ All notable changes to this project will be documented in this file.
 ## [1.2.6]
 ### Changed
 - `dirty?` submit handler into `dirty`. Now, the variable returns either `nil` or a map of changed values.
+
+## [2.0.0]
+### Changed
+- to use *Fork* now you need to require either `fork.re-frame` or `fork.reagent`. For the bulma UI kit require `fork.bulma`
+- `:on-submit-response` map has been removed. It's better to delegate the server for the error messages
+- `:on-submit-response-message` has changed into `:on-submit-server-message`
+- `:set-status-code` has changed into `:set-server-message`
+- `:set-waiting`, `:set-submitting`, and `:set-server-message` are now globally accessible from your `fork.re-frame` or `fork.reagent` namespaces.
+- the re-frame interceptors `:on-submit` and `:clean` have been removed. Therefore, now you need to set submitting? to true yourself (through the global helper).

@@ -13,16 +13,20 @@ Yet another Form Library to add to the list. Inspired by [Formik](https://github
 [Live demo](https://juxt.pro/blog/posts/clojurescript-form-library.html)
 
 ## Why Fork?
-If there is anything certain about us developers, it is that sooner or later we will have to deal with forms. No way around it.
+Forms are hard. Orchestrating their ever changing state, complex logic, and rich UI elements is quite a challenging task.
 
-**Fork** tries to establish a pattern by abstracting away the bits you have written over and over to shift your focus on the features implementation. The following points represent the pillars *Fork* was built upon:
+**Fork** tries to establish a pattern by abstracting away the bits of code that can be generalized to shift the developer's focus on the features implementation. The following points represent the pillars *Fork* was built upon:
 
 * Control - *You code your form components*
 * Adaptable - *Plug it in and take only what you need*
-* Separation of concerns - *The state is kept local with a Ratom, while Re-frame handles global events*
+* Separation of concerns - *Logic and UI live in different places*
 * CSS Free - *You manage the style*
 
-As at this state you must be dying of curiosity, I will dive right into the code implementation hoping that this will help you save the day... and some nerves.
+It's worth to point out that from v2.0.0 this library doesn't necessarily require re-frame. In fact, you can use it exclusively with Reagent.
+
+As at this state you must be dying of curiosity, I will dive right into the implementation details, hoping that this will help you save the day... and some nerves.
+
+
 
 ## API
 
@@ -31,7 +35,7 @@ As at this state you must be dying of curiosity, I will dive right into the code
 #### In Deps
 
 ```clojure
-fork {:mvn/version "1.2.6"}
+fork {:mvn/version "2.0.0"}
 ```
 
 or
@@ -46,8 +50,12 @@ fork {:git/url "https://github.com/luciodale/fork.git"
 ```clojure
 (ns your.namespace
   (:require
-  [fork.core :as fork]))
+    ;; depending on what you want to use
+	[fork.re-frame :as fork]
+	[fork.reagent :as fork-reagent]))
 ```
+
+Note that the APIs of `fork.re-frame` and `fork.reagent` are identical, so I will be using only the former in the following examples.
 
 ### The Bare Minimum
 
@@ -68,16 +76,17 @@ fork {:git/url "https://github.com/luciodale/fork.git"
    my-form])
  ```
 
-Notice that *Fork* takes only two parameters. The first one is a map of utilities you provide, and the second one is a function that returns your component. It is by destructuring the first and only param of the form function that you get all the goodies straight from the API.
+Notice that *Fork* takes only two parameters. The first one is a map of config, and the second one is a function that returns your form component. Many API helpers are accessible as first argument of the form function that wraps your form component.
 
-Starting from `:initial-values`, this key might be provided to make *Fork* aware of any of your prefilled form values. Make sure to match the `:name` of your inputs with what you define in the `:initial-values` map to successfully link up the handlers. Do not use keywords for input names, as html casts them to strings anyways giving you `":input"`. If you don't need to set default values for your fields, you can discard this key.
+Starting from the config map, `:initial-values` might be provided to make *Fork* aware of any of your prefilled form values. Make sure to match the `:name` of your inputs with what you define in the `:initial-values` map to successfully link up the two. Do not use keywords for input names, as they are automatically cast to strings, giving you weird values like `":input"`. If you don't need to set default values for your fields, you can discard this key.
 
 ### Can I go anonymous?
 
 You can also return your component in an anonymous function, but you have to be careful not to cause unwanted re-renderings by updating any external state. The following code is an example of what you want to avoid, when using an anonymous function:
 
 ```clojure
-;; Bad code
+;;!!!!! BAD CODE !!!!!
+
 (defn foo []
   (let [external-input (r/atom nil)]
     (fn []
@@ -99,32 +108,41 @@ You can also return your component in an anonymous function, but you have to be 
              :on-change #(do (reset! external-input "some-value")
                              (handle-change %))
              :on-blur handle-blur}]])]])))
+
+;;!!!!! BAD CODE !!!!!
+
 ```
 
 Briefly, the `"name"` input will lose focus every time its `:on-change` event is dispatched. This happens because the handler creates a new value for the `external-input` state, which sparks the re-rendering of the whole `foo` component.
 
-As a solution, you might keep the anonymous function in place as long as you remember to use the `foo` component exclusively for the logic related to `fork/form`. This approach will be adopted in the next snippets for readability purposes.
+As a solution, you might keep the anonymous function in place as long as you remember to use the `foo` component exclusively for the logic related to `fork/form`.
 
 ### How do I submit a form?
 
 ```clojure
 (ns your.namespace
   (:require
-  [fork.core :as fork]
-   [re-frame.core :as rf))
+   [fork.re-frame :as fork]
+   [re-frame.core :as rf]))
 
 (rf/reg-event-fx
  :submit-handler
- [(fork/on-submit :form)]
- (fn [{db :db} [_ {:keys [values dirty]}]]
+ (fn [{db :db} [_ {:keys [values dirty path]}]]
    ;; dirty tells you whether the values have been touched before submitting.
-   ;; its possible values are nil or a map of changed values
+   ;; Its possible values are nil or a map of changed values
+   {:db (fork/set-submitting db path true)
+    :dispatch-later [{:ms 1000
+                      :disptach [:resolved-form path values]}]}))
+
+(rf/reg-event-fx
+ :resolved-form
+ (fn [{db :db} [_ path values]]
    (js/alert values)
-   {:db (fork/set-submitting db :form false)}))
+   {:db (fork/set-submitting db path false)}))
 
 (defn foo []
   [fork/form {:path :form
-              :form-id "id"
+              :form-id "form-id"
               :prevent-default? true
               :clean-on-unmount? true
               :on-submit #(rf/dispatch [:submit-handler %])}
@@ -156,62 +174,63 @@ Let's examine what has been added step by step:
 * Destructure `handle-submit` and `submitting?` to be used in your UI
 * Wrap your inputs in a form tag and add a submit button
 
-If some parts look a bit obscure, the following detailed explanation will get rid of all your doubts.
+If some parts look a bit obscure, the will be explained thoroughly in the following paragraphs.
 
 #### Params
 
-`:form-id` makes fork aware of your form elements. If it is not specified, a random id will be generated and will be provided through the same `:form-id` key. It is mandatory to use it
+`:form-id` makes fork aware of your form elements. If it is not specified, a random id will be generated and will be provided through the same `:form-id` key.
 
-`:path` lets you choose where to store your form global state in Re-frame
+`:path` lets you choose where to store your form global events i.e. server related stuff. MANDATORY!
 
-`:prevent-default?` does not automatically submit your form to the server
+`:prevent-default?` does not automatically send your form to the server on submit.
 
-`:clean-on-unmount?` resets the global state when your component is unmounted
+`:clean-on-unmount?` resets the state when your component is unmounted. (Useful when used with re-frame).
 
-`:validation` to pass a validation function that takes the values as only param
+`:validation` to pass a validation function that gives you the form values im a map as single param.
 
-`:initial-values` to pre-populate the inputs
+`:initial-values` to pre-populate the inputs.
 
-`:initial-touched` to pre-populate the inputs and set them as touched
+`:initial-touched` to pre-populate the inputs and set them as touched.
 
-`:on-submit` lets you write your own submit logic in a Re-frame event
+`:on-submit` lets you write your own submit logic. It gives you a map with `:state :path :values :dirty` keys.
 
-`:on-submit-response` to provide a map of server messages based on status codes
+`:on-submit-server-message` returns a string message coming from the server response body.
 
 `:component-did-mount` to perform any logic after the component is mounted. It takes a function and provides one argument that consists of a map of handlers: `set-touched, set-untouched, set-values, disable, enable, disabled?, handle-change, handle-blur, send-server-request`
 
 #### The Flow
 
-After clicking the submit button, the interceptor `(fork/on-submit :form)` sets `submitting?` to true. Remember to pass `:form` to the interceptor function, and make sure that it matches the `:path` value you have given to *Fork*. At this stage, your event is executed and the only detail to remember is to set `:submitting?` to false when the form life cycle is completed. You can choose to handle the global state with your own functions or rely on some helpers like `fork/set-submitting`. It's really up to you.
+After clicking the submit button, your `:on-submit` function is invoked. Remember to set submitting? to `true` with the handler `fork/set-submitting`. After your eventual ajax call, do not forget to set the submitting? value back to false with the same handler to handle the form life cycle.
 
-You probably want to know more than the same old *Hello World* demonstration. Hence, I have prepared a REAL example that includes a server request and shows better what *Fork* can do for you.
+You probably want to know more than the same old *Hello World* demonstration. Hence, I have prepared a better example that includes a server request and shows better what *Fork* can do for you.
 
 ```clojure
 (ns your.namespace
   (:require
    [ajax.core :as ajax]
    [day8.re-frame.http-fx]
-   [fork.core :as fork]
-   [re-frame.core :as rf))
+   [fork.re-frame :as fork]
+   [re-frame.core :as rf]))
 
 (rf/reg-event-fx
  :success
- [(fork/clean :form)]
- (fn [{db :db} [_ result]]
-   {:db (assoc db :result result)}))
+ (fn [{db :db} [_ result path]]
+   {:db (-> db
+            (assoc :result result)
+            (fork/set-submitting path false)
+            (fork/set-server-message path "Registration successful!"))}))
 
 (rf/reg-event-fx
  :failure
- (fn [{db :db} [_ result]]
+ (fn [{db :db} [_ result path]]
    {:db (-> db
-            (fork/set-submitting :form false)
-            (fork/set-status-code :form 500))}))
+            (fork/set-submitting path false)
+            (fork/set-server-message path "Registration failed!"))}))
 
 (rf/reg-event-fx
  :submit-handler
- [(fork/on-submit :form)]
- (fn [{db :db} [_ {:keys [values]}]]
-   {:db db
+ (fn [{db :db} [_ {:keys [values path]}]]
+   {:db (fork/set-submitting db path true)
     :http-xhrio
     {:method :post
      :uri "/submit-form"
@@ -219,23 +238,21 @@ You probably want to know more than the same old *Hello World* demonstration. He
      :timeout 2000
      :format (ajax/transit-request-format)
      :response-format (ajax/transit-response-format)
-     :on-success [:success]
-     :on-failure [:failure]}}))
+     :on-success [:success path]
+     :on-failure [:failure path]}}))
 
 (defn foo []
   [fork/form {:form-id "id"
               :path :form
               :prevent-default? true
               :clean-on-unmount? true
-              :on-submit-response {400 "client error"
-                                   500 "server error"}
               :on-submit #(rf/dispatch [:submit-handler %])}
    (fn [{:keys [values
                 form-id
                 handle-change
                 handle-blur
                 submitting?
-                on-submit-response
+				on-submit-server-message
                 handle-submit]}]
      [:form
       {:id form-id
@@ -249,18 +266,8 @@ You probably want to know more than the same old *Hello World* demonstration. He
        {:type "submit"
         :disabled submitting?}
        "Submit Form"]
-      [:p on-submit-response]])])
+      [:p on-submit-server-message]])])
 ```
-
-A few things to keep in mind:
-
-* Always return the db in your `:submit-handler` to not lose the interceptor updates i.e. `{:db db}`
-
-* Notice the usage of `fork/set-status-code` in the `:failure` handler. It makes sure that `on-submit-response` will get the right message out of the `:on-submit-response` map passed to _Fork_
-
-* You might choose to use the `fork/clean` interceptor to clean the whole state or parts of it i.e. `(fork/clean :form :submitting?)`
-
-* You don't really need to clean the state if your component is unmounted, as the `:clean-on-unmount?` option will take care of it
 
 ### Cool, but what about validation?
 
@@ -290,45 +297,45 @@ Let's integrate the validation with our *Fork* component to actually display the
 
 ```clojure
 [fork/form {:path :form
-               :form-id "id"
-               :validation #(vlad/field-errors validation %)
-               :prevent-default? true
-               :clean-on-unmount? true
-               :on-submit #(rf/dispatch [:submit-handler %])}
-    (fn [{:keys [values
-                 form-id
-                 errors
-                 touched
-                 handle-change
-                 handle-blur
-                 submitting?
-                 handle-submit]}]
-      [:form
-       {:id form-id
-        :on-submit handle-submit}
-       [:input
-        {:name "name"
-         :value (values "name")
-         :on-change handle-change
-         :on-blur handle-blur}]
-       (when (touched "name")
-         [:div (first (get errors (list "name")))])
-       [:input
-        {:name "password"
-         :value (values "password")
-         :on-change handle-change
-         :on-blur handle-blur}]
-       (when (touched "password")
-         [:div (first (get errors (list "password")))])
-       [:button
-        {:type "submit"
-         :disabled submitting?}
-        "Submit Form"]])]
+            :form-id "id"
+            :validation #(vlad/field-errors validation %)
+            :prevent-default? true
+            :clean-on-unmount? true
+            :on-submit #(rf/dispatch [:submit-handler %])}
+ (fn [{:keys [values
+              form-id
+              errors
+              touched
+              handle-change
+              handle-blur
+              submitting?
+              handle-submit]}]
+   [:form
+    {:id form-id
+     :on-submit handle-submit}
+    [:input
+     {:name "name"
+      :value (values "name")
+      :on-change handle-change
+      :on-blur handle-blur}]
+    (when (touched "name")
+      [:div (first (get errors (list "name")))])
+    [:input
+     {:name "password"
+      :value (values "password")
+      :on-change handle-change
+      :on-blur handle-blur}]
+    (when (touched "password")
+      [:div (first (get errors (list "password")))])
+    [:button
+     {:type "submit"
+      :disabled submitting?}
+     "Submit Form"]])]
 ```
 
-Noticed anything new? We are simply passing the vlad validation function along with a `:validation` key and destructuring `touched`. The latter comes in handy to improve the user experience in that the errors are not shown until the first `:on-blur` event is fired.
+Noticed anything new? We are simply passing the vlad validation function along with a `:validation` key and destructuring `:touched`. The latter comes in handy to improve the user experience in that the errors are not shown until the first `:on-blur` event is fired.
 
-When a validation function is provided, the submit button will do nothing until all errors are cleared. The only variable that does change is `submit-count`, which is incremented every time the `on-click` event is fired.
+When a validation function is provided, the submit button will do nothing until all errors are cleared. The only variable that does change is `:submit-count`, which is incremented every time the submission is attempted.
 
 #### Little Vlad note:
 
@@ -367,15 +374,15 @@ Since version `1.1.0`, the handler `send-server-request` provides a way of perfo
 ```clojure
 (rf/reg-event-fx
  :server-request
- (fn [_ [_ values]]
+ (fn [_ [_ props]]
    ;; faking a server request
-   {:dispatch-later [{:ms 200 :dispatch [:response values]}]}))
+   {:dispatch-later [{:ms 2000 :dispatch [:response props]}]}))
 
 (rf/reg-event-fx
  :response
- (fn [{db :db} [_ values]]
+ (fn [{db :db} [_ {:keys [values path]}]]
    ;; so that the form can be submitted
-   {:db (fork/set-waiting db :form "email" false)}))
+   {:db (fork/set-waiting db path "email" false)}))
 
 (defn foo []
   [fork/form {:path :form
@@ -406,7 +413,7 @@ Since version `1.1.0`, the handler `send-server-request` provides a way of perfo
         "Submit"]]])])
 ```
 
-After destructuring `send-server-request`, this function is invoked within the `:on-change` handler. It takes either two or three parameters being:
+After destructuring `:send-server-request`, this function is invoked within the `:on-change` handler. It takes either two or three parameters being:
 
 - An event - *Required*
 
@@ -414,7 +421,7 @@ After destructuring `send-server-request`, this function is invoked within the `
 
 - An optional map - `:debounce` and `:throttle` are both supported from `v1.2.4`
 
-To prevent the form submission while waiting for a server response, a `:waiting? true` key value pair is stored in the Re-frame state and needs to be set to false after the server logic is resolved. You can do this yourself or use `(fork/set-waiting db :form "email" false)`, as showed above. Now, the form can be submitted.
+To prevent the form submission while waiting for a server response, a `:waiting? true` key value pair is stored in the state and needs to be set to false after the server logic is resolved. You can do this yourself or use `(fork/set-waiting db path "email" false)`, as shown above. Now, the form can be submitted.
 
 ### Does Fork do anything else for me?
 
@@ -422,7 +429,7 @@ You bet it does. The keys you can currently access from your form function are:
 
 ```clojure
 [{:keys
-  [db
+  [db ;; <- only re-frame
    props
    state
    reset
@@ -441,7 +448,7 @@ You bet it does. The keys you can currently access from your form function are:
    handle-change
    handle-blur
    handle-submit
-   on-submit-response
+   on-submit-server-message
    send-server-request]}]
 ```
 #### Quick overview
@@ -451,6 +458,7 @@ Here is a demonstration on how to use the above handlers that have not been ment
 ```clojure
 ;; db is simply the dereferenced re-frame state that fork uses for global logic
 
+;; state is the local ratom used for the full form core logic
 (swap! state assoc :something :new)
 
 ;; to remove full state
@@ -516,7 +524,13 @@ The quickest way to get Bulma is to require the CSS in the header of your index.
 ### Input
 
 ```clojure
-[fork/input props
+(ns your.namespace
+  (:require
+   [fork.bulma :as bulma]))
+```
+
+```clojure
+[bulma/input props
  {:name "input"
   :label "First Name"
   :placeholder "Joe"
@@ -529,7 +543,7 @@ To get all the props from your form function in one shot, you can add :as props 
 ### Text Area
 
 ```clojure
-[fork/textarea props
+[bulma/textarea props
  {:name "area"
   :label "Summary"
   :placeholder "Max 400 words"
@@ -540,7 +554,7 @@ To get all the props from your form function in one shot, you can add :as props 
 ### Checkbox
 
 ```clojure
-[fork/checkbox props
+[bulma/checkbox props
  {:name "agree"
   :text "Plain text or component as well"}]
 ```
@@ -550,7 +564,7 @@ If you pass a component to `:text` such as `[:div "Some text"]`, add the `displa
 ### Dropdowns
 
 ```clojure
-[fork/pretty-dropdown props
+[bulma/pretty-dropdown props
  {:label "Optional Label"
   :name "pretty-dropdown"
   :options [{"key-1" 1}
@@ -560,7 +574,7 @@ If you pass a component to `:text` such as `[:div "Some text"]`, add the `displa
 ```
 
 ```clojure
-[fork/dropdown props
+[bulma/dropdown props
  {:label "Optional Label"
   :name "pretty-dropdown"
   :options [{"key-1" 1}
