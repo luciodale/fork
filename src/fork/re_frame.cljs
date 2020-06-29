@@ -26,11 +26,6 @@
  (fn [db [_ path]]
    (get db path)))
 
-(rf/reg-event-db
- ::clean
- (fn [db [_ path]]
-   (dissoc db path)))
-
 (defn form
   [props _]
   (let [state (r/atom {:values (or (merge (:initial-values props)
