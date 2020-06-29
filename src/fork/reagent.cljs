@@ -11,9 +11,9 @@
   [state path bool]
   (core/set-submitting state path bool))
 
-(defn set-status-code
-  [state path status-code]
-  (core/set-status-code state path status-code))
+(defn set-server-message
+  [state path message]
+  (core/set-server-message state path message))
 
 (defn form
   [props _]
@@ -55,7 +55,7 @@
       (fn [props component]
         (let [validation (when-let [val-fn (:validation props)]
                            (core/handle-validation @state val-fn))
-              on-submit-response (get (:on-submit-response props) (get-in @state [path :status-code]))]
+              on-submit-server-message (get-in @state [path :server-message])]
           [component
            {:props (:props props)
             :state state
@@ -63,7 +63,7 @@
             :form-id form-id
             :values (:values @state)
             :errors validation
-            :on-submit-response on-submit-response
+            :on-submit-server-message on-submit-server-message
             :touched (:touched @state)
             :set-touched (:set-touched handlers)
             :set-untouched (:set-untouched handlers)
@@ -81,8 +81,6 @@
                              (core/handle-submit evt (merge props
                                                             {:path path
                                                              :state state
-                                                             :set-submitting core/set-submitting
-                                                             :set-status-code core/set-status-code
                                                              :server (get-in @state [path :server])
                                                              :form-id form-id
                                                              :validation validation})))}]))})))

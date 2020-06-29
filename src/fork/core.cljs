@@ -26,9 +26,9 @@
   [db path input-name bool]
   (assoc-in db [path :server input-name :waiting?] bool))
 
-(defn set-status-code
-  [db path status-code]
-  (assoc-in db [path :status-code] status-code))
+(defn set-server-message
+  [db path message]
+  (assoc-in db [path :server-message] message))
 
 (defn set-touched
   [names state]
@@ -99,14 +99,13 @@
 (defn handle-submit
   [evt {:keys [state server on-submit prevent-default?
                initial-values touched-values path
-               validation form-id set-submitting set-status-code]}]
+               validation form-id]}]
   (when prevent-default? (.preventDefault evt))
   (on-submit-state-updates state form-id)
   (when (and (nil? validation) (every? #(false? (:waiting? %)) (vals server)))
     (on-submit
-     {:set-submitting (fn [state bool] (set-submitting state path bool))
-      :set-status-code (fn [state status-code] (set-status-code state path status-code))
-      :state state
+     {:state state
+      :path path
       :values (:values @state)
       :dirty (dirty (:values @state) (merge initial-values
                                             touched-values))})))
@@ -116,12 +115,11 @@
   (let [input-key (-> evt .-target (.getAttribute "name"))
         input-value (element-value evt)
         props (merge
-               {:values (merge
+               {:path path
+                :values (merge
                          (:values @state)
                          {input-key input-value})}
-               {:state state
-                :set-waiting (fn [state input-name bool]
-                               (set-waiting state path input-name bool))})]
+               {:state state})]
     (set-waiting-true input-key)
     (cond
       debounce (do

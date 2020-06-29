@@ -12,9 +12,9 @@
   [state path bool]
   (core/set-submitting state path bool))
 
-(defn set-status-code
-  [db path status-code]
-  (core/set-status-code db path status-code))
+(defn set-server-message
+  [db path message]
+  (core/set-server-message db path message))
 
 (rf/reg-event-db
  ::server-set-waiting
@@ -52,11 +52,12 @@
                     (core/send-server-request
                      e f (merge opts
                                 {:state state
+                                 :path path
                                  :set-waiting core/set-waiting
                                  :set-waiting-true
                                  (fn [input-name]
                                    (rf/dispatch [::server-set-waiting
-                                                 (:path opts) input-name true]))})))
+                                                 path input-name true]))})))
                   :reset (fn [& [m]] (reset! state (merge {:values {}
                                                            :touched #{}}
                                                           m)))}]
@@ -73,7 +74,7 @@
         (let [db @(rf/subscribe [::db (:path props)])
               validation (when-let [val-fn (:validation props)]
                            (core/handle-validation @state val-fn))
-              on-submit-response (get (:on-submit-response props) (:status-code db))]
+              on-submit-server-message (:server-message db)]
           [component
            {:props (:props props)
             :state state
@@ -82,7 +83,7 @@
             :form-id form-id
             :values (:values @state)
             :errors validation
-            :on-submit-response on-submit-response
+            :on-submit-server-message on-submit-server-message
             :touched (:touched @state)
             :set-touched (:set-touched handlers)
             :set-untouched (:set-untouched handlers)
@@ -100,33 +101,6 @@
                                                           {:state state
                                                            :set-submitting (fn [db bool]
                                                                              (set-submitting db path bool))
-                                                           :set-status-code (fn [db status-code]
-                                                                              (set-status-code db path status-code))
                                                            :server (:server db)
                                                            :form-id form-id
                                                            :validation validation}))}]))})))
-
-;; Re-frame utils that can be easily extended to provide more functionality
-
-(defn on-submit
-  "Set global variables in reframe db when submitting."
-  ([]
-   (on-submit ::global))
-  ([path]
-   (rf/->interceptor
-    :id :on-submit
-    :before (fn [context]
-              (update-in context [:coeffects :db]
-                         #(assoc-in % [path :submitting?] true))))))
-
-(defn clean
-  "Clean form state or a list of specified keys from reframe db."
-  [path & [sub-path]]
-  (let [path (or path ::global)]
-    (rf/->interceptor
-     :id :clean
-     :after (fn [context]
-              (if sub-path
-                (update-in context (concat [:effects :db path]
-                                           (butlast sub-path)) dissoc (last sub-path))
-                (update-in context [:effects :db] dissoc path))))))
