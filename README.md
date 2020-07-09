@@ -186,13 +186,13 @@ If some parts look a bit obscure, the will be explained thoroughly in the follow
 
 `:clean-on-unmount?` resets the state when your component is unmounted. (Useful when used with re-frame).
 
-`:validation` to pass a validation function that gives you the form values im a map as single param.
+`:validation` to pass a validation function that gives you the form values in a map as single param.
 
 `:initial-values` to pre-populate the inputs.
 
 `:initial-touched` to pre-populate the inputs and set them as touched.
 
-`:on-submit` lets you write your own submit logic. It gives you a map with `:state :path :values :dirty` keys.
+`:on-submit` lets you write your own submit logic. It gives you a map with `:state :path :values :dirty :reset` keys.
 
 `:on-submit-server-message` returns a string message coming from the server response body.
 

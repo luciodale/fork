@@ -99,7 +99,7 @@
 (defn handle-submit
   [evt {:keys [state server on-submit prevent-default?
                initial-values touched-values path
-               validation form-id]}]
+               validation form-id reset]}]
   (when prevent-default? (.preventDefault evt))
   (on-submit-state-updates state form-id)
   (when (and (nil? validation) (every? #(false? (:waiting? %)) (vals server)))
@@ -108,7 +108,8 @@
       :path path
       :values (:values @state)
       :dirty (dirty (:values @state) (merge initial-values
-                                            touched-values))})))
+                                            touched-values))
+      :reset reset})))
 
 (defn send-server-request
   [evt http-fn {:keys [state path set-waiting-true debounce throttle]}]
