@@ -98,4 +98,5 @@
                                                                              (set-submitting db path bool))
                                                            :server (:server db)
                                                            :form-id form-id
-                                                           :validation validation}))}]))})))
+                                                           :validation validation
+                                                           :reset (:reset handlers)}))}]))})))
