@@ -20,7 +20,7 @@
 
 (defn set-submitting
   [db path bool]
-  (if (seqable? db)
+  (if (associative? db)
     (assoc-in db [path :submitting?] bool)
     (swap! db #(assoc-in % [path :submitting?] bool))
     ))
