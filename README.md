@@ -418,6 +418,29 @@ After destructuring `:send-server-request`, this function is invoked within the 
 
 To prevent the form submission while waiting for a server response, a `:waiting? true` key value pair is stored in the state and needs to be set to false after the server logic is resolved. You can do this yourself or use `(fork/set-waiting db path "email" false)`, as shown above. Now, the form can be submitted.
 
+### Global accessible helpers
+
+As per v2.0.1, there are three global helpers: `set-waiting`, `set-submitting`, and `set-server-message`.
+
+Note that they do not include side effects at their core. Contrarily, they are meant to simply operate on the old state in order to return the updated one.
+
+When used with re-frame, these handlers can be safely called on the `db` of your events. In a purely reagent context, they can be provided as arguments of the `swap!` function i.e. `(swap! state f/set-submitting path true)`.
+
+The reason behind their side effect free design is to make them composable, thus preventing the triggering of multiple state updates. In practice, this approach favors this:
+
+```clojure
+(swap! state #(-> %
+                  (f/set-submitting path true)
+                  (update :some-key inc)))
+```
+
+ Instead of the inefficient version:
+
+```clojure
+(swap! state f/set-submitting path true)
+(swap! state update :some-key inc)
+```
+
 ### Does Fork do anything else for me?
 
 You bet it does. The keys you can currently access from your form function are:
