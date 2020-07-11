@@ -60,10 +60,6 @@
      {:component-did-mount
       #(when-let [on-mount (:component-did-mount props)]
          (on-mount handlers))
-      :component-will-unmount
-      (fn []
-        (when (:clean-on-unmount? props)
-          (rf/dispatch [::clean (:path props)])))
       :reagent-render
       (fn [props component]
         (let [db @(rf/subscribe [::db (:path props)])

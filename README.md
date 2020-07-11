@@ -35,7 +35,7 @@ As at this state you must be dying of curiosity, I will dive right into the impl
 #### In Deps
 
 ```clojure
-fork {:mvn/version "2.0.0"}
+fork {:mvn/version "2.0.1"}
 ```
 
 or
@@ -144,7 +144,6 @@ As a solution, you might keep the anonymous function in place as long as you rem
   [fork/form {:path :form
               :form-id "form-id"
               :prevent-default? true
-              :clean-on-unmount? true
               :on-submit #(rf/dispatch [:submit-handler %])}
     (fn [{:keys [values
                  form-id
@@ -183,8 +182,6 @@ If some parts look a bit obscure, the will be explained thoroughly in the follow
 `:path` lets you choose where to store your form global events i.e. server related stuff. MANDATORY!
 
 `:prevent-default?` does not automatically send your form to the server on submit.
-
-`:clean-on-unmount?` resets the state when your component is unmounted. (Useful when used with re-frame).
 
 `:validation` to pass a validation function that gives you the form values in a map as single param.
 
@@ -245,8 +242,7 @@ You probably want to know more than the same old *Hello World* demonstration. He
   [fork/form {:form-id "id"
               :path :form
               :prevent-default? true
-              :clean-on-unmount? true
-              :on-submit #(rf/dispatch [:submit-handler %])}
+			  :on-submit #(rf/dispatch [:submit-handler %])}
    (fn [{:keys [values
                 form-id
                 handle-change
@@ -300,7 +296,6 @@ Let's integrate the validation with our *Fork* component to actually display the
             :form-id "id"
             :validation #(vlad/field-errors validation %)
             :prevent-default? true
-            :clean-on-unmount? true
             :on-submit #(rf/dispatch [:submit-handler %])}
  (fn [{:keys [values
               form-id
