@@ -425,7 +425,7 @@ To prevent the form submission while waiting for a server response, a `:waiting?
 
 ### Global accessible helpers
 
-As per v2.0.1, there are three global helpers: `set-waiting`, `set-submitting`, and `set-server-message`.
+There are three global helpers: `set-waiting`, `set-submitting`, and `set-server-message`.
 
 Note that they do not include side effects at their core. Contrarily, they are meant to simply operate on the old state in order to return the updated one.
 
