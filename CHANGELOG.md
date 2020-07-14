@@ -69,3 +69,7 @@ All notable changes to this project will be documented in this file.
 - `:set-status-code` has changed into `:set-server-message`
 - `:set-waiting`, `:set-submitting`, and `:set-server-message` are now globally accessible from your `fork.re-frame` or `fork.reagent` namespaces.
 - the re-frame interceptors `:on-submit` and `:clean` have been removed. Therefore, now you need to set submitting? to true yourself (through the global helper).
+
+## [2.0.4]
+### Added
+- `errors`, `dirty`, and `touched` arguments to the `send-server-request` user provided function.

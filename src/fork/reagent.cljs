@@ -35,8 +35,9 @@
                   (fn [e f & [opts]]
                     (core/send-server-request
                      e f (merge opts
+                                props
                                 {:state state
-                                 :path path
+                                 :blur? (= (-> e .-type) "blur")
                                  :set-waiting-true
                                  (fn [input-name]
                                    (swap! state #(core/set-waiting %

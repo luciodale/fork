@@ -51,9 +51,9 @@
                   (fn [e f & [opts]]
                     (core/send-server-request
                      e f (merge opts
+                                props
                                 {:state state
-                                 :path path
-                                 :set-waiting core/set-waiting
+                                 :blur? (= (-> e .-type) "blur")
                                  :set-waiting-true
                                  (fn [input-name]
                                    (rf/dispatch [::server-set-waiting

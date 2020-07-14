@@ -26,8 +26,6 @@ It's worth to point out that from v2.0.0 this library doesn't necessarily requir
 
 As at this state you must be dying of curiosity, I will dive right into the implementation details, hoping that this will help you save the day... and some nerves.
 
-
-
 ## API
 
 ### Require Fork
@@ -35,7 +33,7 @@ As at this state you must be dying of curiosity, I will dive right into the impl
 #### In Deps
 
 ```clojure
-fork {:mvn/version "2.0.2"}
+fork {:mvn/version "2.0.4"}
 ```
 
 or
@@ -417,9 +415,9 @@ After destructuring `:send-server-request`, this function is invoked within the 
 
 - An event - *Required*
 
-- A function that performs the server request, taking the up to date values as argument - *Required*
+- A function that performs the server request, which will be invoked will the following map keys as args `:state :path :values :touched :errors :dirty` - *Required*
 
-- An optional map - `:debounce` and `:throttle` are both supported from `v1.2.4`
+- An optional map to specify the `:debounce` or `:throttle` delay in ms.
 
 To prevent the form submission while waiting for a server response, a `:waiting? true` key value pair is stored in the state and needs to be set to false after the server logic is resolved. You can do this yourself or use `(fork/set-waiting db path "email" false)`, as shown above. Now, the form can be submitted.
 
