@@ -112,19 +112,23 @@
       :reset reset})))
 
 (defn send-server-request
-  [evt http-fn {:keys [state validation path blur? set-waiting-true debounce throttle initial-values touched-values]}]
-  (let [input-key (-> evt .-target (.getAttribute "name"))
-        input-value (element-value evt)
+  [http-fn
+   {:keys [state validation evt name value path set-waiting-true
+           debounce throttle initial-values touched-values]}]
+  (let [input-key name
+        input-value value
         values (merge
                 (:values @state)
-                {input-key input-value})
-        touched (if blur?
+                (when input-value
+                  {input-key input-value}))
+        touched (if (:on-blur evt)
                   (conj (:touched @state) input-key)
                   (:touched @state))
         props {:path path
                :dirty (dirty values (merge initial-values
                                            touched-values))
-               :errors (when validation (handle-validation {:values values} validation))
+               :errors (when validation (handle-validation {:values values}
+                                                           validation))
                :values values
                :touched touched
                :state state}]

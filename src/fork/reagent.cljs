@@ -15,6 +15,10 @@
   [state path message]
   (core/set-server-message state path message))
 
+(defn retrieve-event-value
+  [evt]
+  (core/element-value evt))
+
 (defn form
   [props _]
   (let [state (r/atom {:values (or (merge (:initial-values props)
@@ -32,18 +36,17 @@
                   :handle-change #(core/handle-change % state)
                   :handle-blur #(core/handle-blur % state)
                   :send-server-request
-                  (fn [e f & [opts]]
+                  (fn [config callback]
                     (core/send-server-request
-                     e f (merge opts
-                                props
-                                {:state state
-                                 :blur? (= (-> e .-type) "blur")
-                                 :set-waiting-true
-                                 (fn [input-name]
-                                   (swap! state #(core/set-waiting %
-                                                                   path
-                                                                   input-name
-                                                                   true)))})))
+                     callback (merge config
+                                     props
+                                     {:state state
+                                      :set-waiting-true
+                                      (fn [input-name]
+                                        (swap! state #(core/set-waiting %
+                                                                        path
+                                                                        input-name
+                                                                        true)))})))
                   :reset (fn [& [m]] (reset! state (merge {:values {}
                                                            :touched #{}}
                                                           m)))}]
