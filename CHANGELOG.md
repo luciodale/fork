@@ -76,4 +76,4 @@ All notable changes to this project will be documented in this file.
 
 ## [2.1.0]
 ### Changed
-- `send-server-request` only takes two params. The first one is a map that must contain a `:name` key along with optional `:value`, `:evt`, `:debounce`, `:throttle` keys. The the second one is the user provided fn for the server http request.
+- `send-server-request` only takes two params. The first one is a map that must contain a `:name` key along with optional `:value`, `:evt`, `:debounce`, `:throttle` keys. The second one is the user provided fn for the server http request.
