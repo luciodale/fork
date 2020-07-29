@@ -33,7 +33,7 @@ As at this state you must be dying of curiosity, I will dive right into the impl
 #### In Deps
 
 ```clojure
-fork {:mvn/version "2.0.4"}
+fork {:mvn/version "2.1.0"}
 ```
 
 or
@@ -367,7 +367,7 @@ and pass the password value when giving the function to *Fork* i.e.
 
 ### Dealing with server requests
 
-Since version `1.1.0`, the handler `send-server-request` provides a way of performing server side validation `:on-blur` or `:on-change`, or any other operation that involves your backend code. Here is an example of how it works:
+Since version `1.1.0`, the handler `send-server-request` provides a way of performing server side validation in callbacks like `on-blur` or `:on-change`, or any other operation that involves your backend code. Here is an example of how it works:
 
 ```clojure
 (rf/reg-event-fx
@@ -402,22 +402,34 @@ Since version `1.1.0`, the handler `send-server-request` provides a way of perfo
          :on-blur handle-blur
          :on-change (fn [evt]
                       (handle-change evt)
-                      (send-server-request evt
-                                           #(rf/dispatch [:server-request %])
-                                           ;; optional
-                                           {:debounce 500}))}]
+                      (send-server-request
+                       {:name "email"
+					    ;; this retrieves the most up to date value
+                        :value (fork/retrieve-event-value evt)
+                        :debounce 500}
+                       #(rf/dispatch [:server-request %])))}]
        [:button
-         {:type "submit"}
+        {:type "submit"}
         "Submit"]]])])
 ```
 
-After destructuring `:send-server-request`, this function is invoked within the `:on-change` handler. It takes either two or three parameters being:
+After destructuring `:send-server-request`, this function is invoked within the `:on-change` handler. It takes two parameters being:
 
-- An event - *Required*
+- A config map with the following keys
 
-- A function that performs the server request, which will be invoked will the following map keys as args `:state :path :values :touched :errors :dirty` - *Required*
+```clojure
+{;; REQUIRED - as it's used as a state holder internally
+ :name "email"
+ ;; OPTIONAL - if not provided the callback will receive the old value
+ :value (fork/retrieve-event-value evt)
+ ;; OPTIONAL - relevant in the :on-blur case as it sets the `touched` property
+ :evt :on-change
+ ;; OPTIONAL & MUTUALLY EXCLUSIVE
+ :throttle 500
+ :debounce 500}
+```
 
-- An optional map to specify the `:debounce` or `:throttle` delay in ms.
+- A function that performs the server request, which will be invoked with the following map keys as args `:state :path :values :touched :errors :dirty` -
 
 To prevent the form submission while waiting for a server response, a `:waiting? true` key value pair is stored in the state and needs to be set to false after the server logic is resolved. You can do this yourself or use `(fork/set-waiting db path "email" false)`, as shown above. Now, the form can be submitted.
 
