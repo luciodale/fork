@@ -81,3 +81,10 @@ All notable changes to this project will be documented in this file.
 ## [2.1.1]
 ### Added
 - `keywordize-keys` config param. It casts all strings to keywords, allowing the developer to only deal with keywords across the form components and handlers.
+
+## [2.1.3]
+### Added
+- `successful-submissions` value to props.
+
+### Changed
+- `submit-count` into `attempted-submissions`.

@@ -110,7 +110,7 @@
                         (fn [x y]
                           (apply conj x y))
                         input-names)
-                (update :submit-count inc)))))
+                (update :attempted-submissions inc)))))
 
 (defn dirty
   [values initial-values]
@@ -123,6 +123,7 @@
   (when prevent-default? (.preventDefault evt))
   (on-submit-state-updates state form-id)
   (when (and (nil? validation) (every? #(false? (:waiting? %)) (vals server)))
+    (swap! state update :successful-submissions inc)
     (on-submit
      {:state state
       :path path

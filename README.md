@@ -33,7 +33,7 @@ As at this state you must be dying of curiosity, I will dive right into the impl
 #### In Deps
 
 ```clojure
-fork {:mvn/version "2.1.1"}
+fork {:mvn/version "2.1.3"}
 ```
 
 or
@@ -333,7 +333,7 @@ Let's integrate the validation with our *Fork* component to actually display the
 
 Noticed anything new? We are simply passing the vlad validation function along with a `:validation` key and destructuring `:touched`. The latter comes in handy to improve the user experience in that the errors are not shown until the first `:on-blur` event is fired.
 
-When a validation function is provided, the submit button will do nothing until all errors are cleared. The only variable that does change is `:submit-count`, which is incremented every time the submission is attempted.
+When a validation function is provided, the submit button will do nothing until all errors are cleared. The only variable that does change is `:attempted-submissions`, which is incremented every time the submission is attempted. Contrairily, `:successful-submissions` gets updated only when the developer provided on-submit function is invoked.
 
 #### Little Vlad note:
 
@@ -473,7 +473,8 @@ You bet it does. The keys you can currently access from your form function are:
    set-touched
    set-untouched
    submitting?
-   submit-count
+   attempted-submissions
+   successful-submissions
    set-values
    disable
    enable
