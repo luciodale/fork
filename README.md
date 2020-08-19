@@ -33,7 +33,7 @@ As at this state you must be dying of curiosity, I will dive right into the impl
 #### In Deps
 
 ```clojure
-fork {:mvn/version "2.1.3"}
+fork {:mvn/version "2.1.4"}
 ```
 
 or
@@ -76,7 +76,7 @@ Note that the APIs of `fork.re-frame` and `fork.reagent` are identical, so I wil
 
 Notice that *Fork* takes only two parameters. The first one is a map of config, and the second one is a function that returns your form component. Many API helpers are accessible as first argument of the form function that wraps your form component.
 
-Starting from the config map, `:initial-values` might be provided to make *Fork* aware of any of your prefilled form values. Make sure to match the `:name` of your inputs with what you define in the `:initial-values` map to successfully link up the two. Do not use keywords for input names, as they are automatically cast to strings, giving you weird values like `":input"`. If you don't need to set default values for your fields, you can discard this key.
+Starting from the config map, `:initial-values` might be provided to make *Fork* aware of any of your prefilled form values. Make sure to match the `:name` of your inputs with what you define in the `:initial-values` map to successfully link up the two. You may want to use keywords for input names. If you do, remember to set the option `:keywordize-keys` to true. If you don't need to set default values for your fields, you can simply discard the key.
 
 ### Can I go anonymous?
 
@@ -180,7 +180,7 @@ If some parts look a bit obscure, the will be explained thoroughly in the follow
 
 `:path` lets you choose where to store your form global events i.e. server related stuff. MANDATORY! - Key
 
-`:keywordize-keys` allows you to work with keywords instead of strings - Boolean
+`:keywordize-keys` allows you to work with keywords instead of strings. - Boolean
 
 `:prevent-default?` does not automatically send your form to the server on submit. - Boolean
 
@@ -365,6 +365,10 @@ and pass the password value when giving the function to *Fork* i.e.
 	    ...]
 ```
 
+### Keywords as input names
+
+By passing the option `{:keywordize-keys true}` to *Fork*, the values and all other state keys will be keywords instead of strings. To make sure the input names are properly registered, use the function `normalize-name` available in the props, when giving the name to the input components i.e. `{:name (normalize-name :bar/foo)}`. Namespaced keys are also supported. If `normalize-name` is used when `keywordize-keys` is not set, the function will simply return the same value.
+
 ### Dealing with server requests
 
 Since version `1.1.0`, the handler `send-server-request` provides a way of performing server side validation in callbacks like `on-blur` or `:on-change`, or any other operation that involves your backend code. Here is an example of how it works:
@@ -473,6 +477,7 @@ You bet it does. The keys you can currently access from your form function are:
    set-touched
    set-untouched
    submitting?
+   normalize-name
    attempted-submissions
    successful-submissions
    set-values
@@ -522,6 +527,7 @@ Here is a demonstration on how to use the above handlers that have not been ment
 ;; input component
 [:input
 {...
+ :name (normalize-name :foo/bar)
  :disabled (disabled? "input")
  ...}]
 ```

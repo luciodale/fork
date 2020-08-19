@@ -88,3 +88,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - `submit-count` into `attempted-submissions`.
+
+## [2.1.4]
+### Added
+- `normalize-name` prop to support namespaced keywords

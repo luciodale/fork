@@ -30,6 +30,12 @@
                   v)]
     (if keywordize? (keyword el-name) el-name)))
 
+(defn normalize-name
+  [k {:keys [keywordize-keys]}]
+  (if keywordize-keys
+    (apply str (rest (str k)))
+    k))
+
 (defn set-values
   [new-values state]
   (swap! state

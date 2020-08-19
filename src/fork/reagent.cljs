@@ -31,6 +31,7 @@
                   :disable (fn [& ks] (core/disable state ks))
                   :enable (fn [& ks] (core/enable state ks))
                   :disabled? #(core/disabled? state %)
+                  :normalize-name #(core/normalize-name % props)
                   :handle-change #(core/handle-change % state)
                   :handle-blur #(core/handle-blur % state)
                   :send-server-request
@@ -75,6 +76,7 @@
             :disable (:disable handlers)
             :enable (:enable handlers)
             :disabled? (:disabled? handlers)
+            :normalize-name (:normalize-name handlers)
             :handle-change (:handle-change handlers)
             :handle-blur (:handle-blur handlers)
             :send-server-request (:send-server-request handlers)
