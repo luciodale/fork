@@ -1,6 +1,18 @@
 (ns fork.core
   (:require
-   [clojure.data :as data]))
+   [clojure.data :as data]
+   [clojure.walk :as walk]))
+
+(defn initialize-state
+  [props]
+  (let [values (or (merge (:initial-values props)
+                          (:initial-touched props))
+                   {})]
+    {:keywordize-keys (:keywordize-keys props)
+     :values (if (:keywordize-keys props)
+               (walk/keywordize-keys values)
+               values)
+     :touched (into #{} (keys (:initial-touched props)))}))
 
 (defn element-value
   [evt]
@@ -9,6 +21,14 @@
       "checkbox"
       (-> evt .-target .-checked)
       (-> evt .-target .-value))))
+
+(defn element-name
+  [t v keywordize?]
+  (let [el-name (case t
+                  :evt (-> v .-target (.getAttribute "name"))
+                  :node (-> v (.getAttribute "name"))
+                  v)]
+    (if keywordize? (keyword el-name) el-name)))
 
 (defn set-values
   [new-values state]
@@ -68,13 +88,13 @@
 
 (defn handle-change
   [evt state]
-  (let [input-key (-> evt .-target (.getAttribute "name"))
+  (let [input-key (element-name :evt evt (:keywordize-keys @state))
         input-value (element-value evt)]
     (swap! state update :values assoc input-key input-value)))
 
 (defn handle-blur
   [evt state]
-  (let [input-key (-> evt .-target .-name)]
+  (let [input-key (element-name :evt evt (:keywordize-keys @state))]
     (swap! state update :touched conj input-key)))
 
 (defn on-submit-state-updates
@@ -82,7 +102,7 @@
   (let [input-names (->> (.-elements
                           (js/document.getElementById form-id))
                          array-seq
-                         (mapv #(.getAttribute % "name"))
+                         (mapv #(element-name :node % (:keywordize-keys @state)))
                          (remove nil?))]
     (swap! state
            #(-> %

@@ -37,10 +37,7 @@
 
 (defn form
   [props _]
-  (let [state (r/atom {:values (or (merge (:initial-values props)
-                                          (:initial-touched props))
-                                   {})
-                       :touched (into #{} (keys (:initial-touched props)))})
+  (let [state (r/atom (core/initialize-state props))
         path (or (:path props) ::global)
         form-id (or (:form-id props) (str (gensym)))
         handlers {:set-touched (fn [& ks] (core/set-touched ks state))
