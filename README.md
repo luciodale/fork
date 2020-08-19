@@ -33,7 +33,7 @@ As at this state you must be dying of curiosity, I will dive right into the impl
 #### In Deps
 
 ```clojure
-fork {:mvn/version "2.1.0"}
+fork {:mvn/version "2.1.1"}
 ```
 
 or
@@ -176,25 +176,25 @@ If some parts look a bit obscure, the will be explained thoroughly in the follow
 
 #### Params
 
-`:form-id` makes fork aware of your form elements. If it is not specified, a random id will be generated and will be provided through the same `:form-id` key.
+`:form-id` makes fork aware of your form elements. If it is not specified, a random id will be generated and will be provided through the same `:form-id` key. - Key
 
-`:path` lets you choose where to store your form global events i.e. server related stuff. MANDATORY!
+`:path` lets you choose where to store your form global events i.e. server related stuff. MANDATORY! - Key
 
-`:prevent-default?` does not automatically send your form to the server on submit.
+`:keywordize-keys` allows you to work with keywords instead of strings - Boolean
 
-`:clean-on-unmount?` resets the state when your component is unmounted. (Useful when used with re-frame).
+`:prevent-default?` does not automatically send your form to the server on submit. - Boolean
 
-`:validation` to pass a validation function that gives you the form values in a map as single param.
+`:clean-on-unmount?` resets the state when your component is unmounted. (Useful when used with re-frame). - Boolean
 
-`:initial-values` to pre-populate the inputs.
+`:validation` to pass a validation function that gives you the form values in a map as single param. - Function
 
-`:initial-touched` to pre-populate the inputs and set them as touched.
+`:initial-values` to pre-populate the inputs. - Map
 
-`:on-submit` lets you write your own submit logic. It gives you a map with `:state :path :values :dirty :reset` keys.
+`:initial-touched` to pre-populate the inputs and set them as touched. - Map
 
-`:on-submit-server-message` returns a string message coming from the server response body.
+`:on-submit` lets you write your own submit logic. It gives you a map with `:state :path :values :dirty :reset` keys. - Function
 
-`:component-did-mount` to perform any logic after the component is mounted. It takes a function and provides one argument that consists of a map of handlers: `set-touched, set-untouched, set-values, disable, enable, disabled?, handle-change, handle-blur, send-server-request`
+`:component-did-mount` to perform any logic after the component is mounted. It takes a function and provides one argument that consists of a map of handlers: `set-touched, set-untouched, set-values, disable, enable, disabled?, handle-change, handle-blur, send-server-request` - Function
 
 #### The Flow
 
