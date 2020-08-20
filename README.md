@@ -33,7 +33,7 @@ As at this state you must be dying of curiosity, I will dive right into the impl
 #### In Deps
 
 ```clojure
-fork {:mvn/version "2.1.4"}
+fork {:mvn/version "2.1.5"}
 ```
 
 or
@@ -139,7 +139,7 @@ As a solution, you might keep the anonymous function in place as long as you rem
    {:db (fork/set-submitting db path false)}))
 
 (defn foo []
-  [fork/form {:path :form
+  [fork/form {:path [:form]
               :form-id "form-id"
               :prevent-default? true
               :clean-on-unmount? true
@@ -178,7 +178,7 @@ If some parts look a bit obscure, the will be explained thoroughly in the follow
 
 `:form-id` makes fork aware of your form elements. If it is not specified, a random id will be generated and will be provided through the same `:form-id` key. - Key
 
-`:path` lets you choose where to store your form global events i.e. server related stuff. MANDATORY! - Key
+`:path` lets you choose where to store your form global events i.e. server related stuff. - Vector of keys
 
 `:keywordize-keys` allows you to work with keywords instead of strings. - Boolean
 
@@ -241,7 +241,7 @@ You probably want to know more than the same old *Hello World* demonstration. He
 
 (defn foo []
   [fork/form {:form-id "id"
-              :path :form
+              :path [:form]
               :prevent-default? true
               :clean-on-unmount? true
               :on-submit #(rf/dispatch [:submit-handler %])}
@@ -294,7 +294,7 @@ Let's now build some real validation for our *Fork* component using for example 
 Let's integrate the validation with our *Fork* component to actually display the errors:
 
 ```clojure
-[fork/form {:path :form
+[fork/form {:path [:form]
             :form-id "id"
             :validation #(vlad/field-errors validation %)
             :prevent-default? true
@@ -387,7 +387,7 @@ Since version `1.1.0`, the handler `send-server-request` provides a way of perfo
    {:db (fork/set-waiting db path "email" false)}))
 
 (defn foo []
-  [fork/form {:path :form
+  [fork/form {:path [:form]
               :prevent-default? true
               :on-submit #(js/alert %)}
    (fn [{:keys [form-id

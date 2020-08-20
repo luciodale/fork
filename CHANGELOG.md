@@ -92,3 +92,7 @@ All notable changes to this project will be documented in this file.
 ## [2.1.4]
 ### Added
 - `normalize-name` prop to support namespaced keywords
+
+## [2.1.5]
+### Changed
+- `path` option now takes a vector of keys
