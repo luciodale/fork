@@ -23,22 +23,22 @@
 (rf/reg-event-db
  ::server-set-waiting
  (fn [db [_ path input-key bool]]
-   (assoc-in db [path :server input-key :waiting?] bool)))
+   (assoc-in db (concat path [:server input-key :waiting?]) bool)))
 
 (rf/reg-sub
  ::db
  (fn [db [_ path]]
-   (get db path)))
+   (get-in db path)))
 
 (rf/reg-event-db
  ::clean
  (fn [db [_ path]]
-   (dissoc db path)))
+   (update-in db (butlast path) dissoc (last path))))
 
 (defn form
   [props _]
   (let [state (r/atom (core/initialize-state props))
-        path (or (:path props) ::global)
+        path (or (:path props) [::global])
         form-id (or (:form-id props) (str (gensym)))
         handlers {:set-touched (fn [& ks] (core/set-touched ks state))
                   :set-untouched (fn [& ks] (core/set-untouched ks state))
@@ -69,10 +69,10 @@
       :component-will-unmount
       (fn []
         (when (:clean-on-unmount? props)
-          (rf/dispatch [::clean (:path props)])))
+          (rf/dispatch [::clean path])))
       :reagent-render
       (fn [props component]
-        (let [db @(rf/subscribe [::db (:path props)])
+        (let [db @(rf/subscribe [::db path])
               validation (when-let [val-fn (:validation props)]
                            (core/handle-validation @state val-fn))
               on-submit-server-message (:server-message db)]
@@ -80,7 +80,7 @@
            {:props (:props props)
             :state state
             :db db
-            :path (:path props)
+            :path path
             :form-id form-id
             :values (:values @state)
             :errors validation

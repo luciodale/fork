@@ -1,8 +1,7 @@
 (ns fork.reagent
   (:require
    [fork.core :as core]
-   [reagent.core :as r]
-   [clojure.walk :as walk]))
+   [reagent.core :as r]))
 
 (defn set-waiting
   [state path input-name bool]
@@ -23,7 +22,7 @@
 (defn form
   [props _]
   (let [state (r/atom (core/initialize-state props))
-        path (or (:path props) ::global)
+        path (or (:path props) [::global])
         form-id (or (:form-id props) (str (gensym)))
         handlers {:set-touched (fn [& ks] (core/set-touched ks state))
                   :set-untouched (fn [& ks] (core/set-untouched ks state))
@@ -57,7 +56,7 @@
       (fn [props component]
         (let [validation (when-let [val-fn (:validation props)]
                            (core/handle-validation @state val-fn))
-              on-submit-server-message (get-in @state [path :server-message])]
+              on-submit-server-message (get-in @state (concat path [:server-message]))]
           [component
            {:props (:props props)
             :state state
@@ -69,7 +68,7 @@
             :touched (:touched @state)
             :set-touched (:set-touched handlers)
             :set-untouched (:set-untouched handlers)
-            :submitting? (get-in @state [path :submitting?])
+            :submitting? (get-in @state (concat path [:submitting?]))
             :attempted-submissions (:attempted-submissions @state)
             :successful-submissions (:successful-submissions @state)
             :set-values (:set-values handlers)
@@ -85,7 +84,7 @@
                              (core/handle-submit evt (merge props
                                                             {:path path
                                                              :state state
-                                                             :server (get-in @state [path :server])
+                                                             :server (get-in @state (concat path [:server]))
                                                              :form-id form-id
                                                              :validation validation
                                                              :reset (:reset handlers)})))}]))})))

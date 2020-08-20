@@ -46,15 +46,15 @@
 
 (defn set-submitting
   [db path bool]
-  (assoc-in db [path :submitting?] bool))
+  (assoc-in db (concat path [:submitting?]) bool))
 
 (defn set-waiting
   [db path input-name bool]
-  (assoc-in db [path :server input-name :waiting?] bool))
+  (assoc-in db (concat path [:server input-name :waiting?]) bool))
 
 (defn set-server-message
   [db path message]
-  (assoc-in db [path :server-message] message))
+  (assoc-in db (concat path [:server-message]) message))
 
 (defn set-touched
   [names state]
