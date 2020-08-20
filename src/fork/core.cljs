@@ -33,7 +33,7 @@
 
 (defn normalize-name
   [k {:keys [keywordize-keys]}]
-  (if keywordize-keys
+  (if (and keywordize-keys (keyword? k))
     (apply str (rest (str k)))
     k))
 
