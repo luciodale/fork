@@ -59,9 +59,9 @@
                                       (fn [input-name]
                                         (rf/dispatch [::server-set-waiting
                                                       path input-name true]))})))
-                  :reset (fn [& [m]] (reset! state (merge {:values {}
-                                                           :touched #{}}
-                                                          m)))}]
+                  :reset (fn [& [m]]
+                           (reset! state (merge {:values {} :touched #{}} m))
+                           (rf/dispatch [::clean path]))}]
     (r/create-class
      {:component-did-mount
       #(when-let [on-mount (:component-did-mount props)]
