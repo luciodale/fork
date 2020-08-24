@@ -38,7 +38,7 @@
 (defn form
   [props _]
   (let [state (r/atom (core/initialize-state props))
-        path (or (:path props) [::global])
+        path (flatten (vector (or (:path props) ::global)))
         form-id (or (:form-id props) (str (gensym)))
         handlers {:set-touched (fn [& ks] (core/set-touched ks state))
                   :set-untouched (fn [& ks] (core/set-untouched ks state))

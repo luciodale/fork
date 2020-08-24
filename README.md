@@ -33,7 +33,7 @@ As at this state you must be dying of curiosity, I will dive right into the impl
 #### In Deps
 
 ```clojure
-fork {:mvn/version "2.1.5"}
+fork {:mvn/version "2.1.6"}
 ```
 
 or
@@ -178,7 +178,7 @@ If some parts look a bit obscure, the will be explained thoroughly in the follow
 
 `:form-id` makes fork aware of your form elements. If it is not specified, a random id will be generated and will be provided through the same `:form-id` key. - Key
 
-`:path` lets you choose where to store your form global events i.e. server related stuff. - Vector of keys
+`:path` lets you choose where to store your form global events i.e. server related stuff. - Keyword/String OR Vector of keys
 
 `:keywordize-keys` allows you to work with keywords instead of strings. - Boolean
 
@@ -387,7 +387,7 @@ Since version `1.1.0`, the handler `send-server-request` provides a way of perfo
    {:db (fork/set-waiting db path "email" false)}))
 
 (defn foo []
-  [fork/form {:path [:form]
+  [fork/form {:path :form ;; or [:path :to :form]
               :prevent-default? true
               :on-submit #(js/alert %)}
    (fn [{:keys [form-id

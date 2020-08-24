@@ -47,15 +47,15 @@
 
 (defn set-submitting
   [db path bool]
-  (assoc-in db (concat path [:submitting?]) bool))
+  (assoc-in db (flatten (conj [:submitting?] path)) bool))
 
 (defn set-waiting
   [db path input-name bool]
-  (assoc-in db (concat path [:server input-name :waiting?]) bool))
+  (assoc-in db (flatten (conj [:server input-name :waiting?] path)) bool))
 
 (defn set-server-message
   [db path message]
-  (assoc-in db (concat path [:server-message]) message))
+  (assoc-in db (flatten (conj [:server-message] path)) message))
 
 (defn set-touched
   [names state]
