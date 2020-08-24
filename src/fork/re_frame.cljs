@@ -54,7 +54,8 @@
                     (core/send-server-request
                      callback (merge config
                                      props
-                                     {:state state
+                                     {:path path
+                                      :state state
                                       :set-waiting-true
                                       (fn [input-name]
                                         (rf/dispatch [::server-set-waiting
@@ -101,7 +102,8 @@
             :send-server-request (:send-server-request handlers)
             :reset (:reset handlers)
             :handle-submit #(core/handle-submit % (merge props
-                                                          {:state state
+                                                         {:state state
+                                                          :path path
                                                            :set-submitting (fn [db bool]
                                                                              (set-submitting db path bool))
                                                            :server (:server db)

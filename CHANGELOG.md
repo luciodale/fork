@@ -97,6 +97,6 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - `path` option now takes a vector of keys
 
-## [2.1.6]
+## [2.1.8]
 ### Changed
 - `path` option takes a vector of keys or a single key identifier for backward compatibility
