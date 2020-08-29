@@ -3,6 +3,15 @@
    [clojure.data :as data]
    [clojure.walk :as walk]))
 
+(defn- vec-remove
+  [coll pos]
+  (vec (concat (subvec coll 0 pos) (subvec coll (inc pos)))))
+
+(defn touched
+  [state k]
+  (or (:attempted-submissions @state)
+      (get (:touched @state) k)))
+
 (defn initialize-state
   [props]
   (let [kw? (:keywordize-keys props)
@@ -45,17 +54,21 @@
               (update :touched (fn [x y]
                                  (apply conj x y)) (keys new-values)))))
 
+(defn vectorize-path
+  [path]
+  (if (vector? path) path [path]))
+
 (defn set-submitting
   [db path bool]
-  (assoc-in db (flatten (cons path [:submitting?])) bool))
+  (assoc-in db (concat (vectorize-path path) [:submitting?]) bool))
 
 (defn set-waiting
   [db path input-name bool]
-  (assoc-in db (flatten (cons path [:server input-name :waiting?])) bool))
+  (assoc-in db (concat (vectorize-path path) [:server input-name :waiting?]) bool))
 
 (defn set-server-message
   [db path message]
-  (assoc-in db (flatten (cons path [:server-message])) message))
+  (assoc-in db (concat (vectorize-path path) [:server-message]) message))
 
 (defn set-touched
   [names state]
@@ -104,20 +117,52 @@
   (let [input-key (element-name :evt evt (:keywordize-keys @state))]
     (swap! state update :touched conj input-key)))
 
-(defn on-submit-state-updates
-  [state form-id]
-  (let [input-names (->> (.-elements
-                          (js/document.getElementById form-id))
-                         array-seq
-                         (mapv #(element-name :node % (:keywordize-keys @state)))
-                         (remove nil?))]
-    (swap! state
-           #(-> %
-                (update :touched
-                        (fn [x y]
-                          (apply conj x y))
-                        input-names)
-                (update :attempted-submissions inc)))))
+(defn fieldarray-handle-change
+  [evt state name idx]
+  (let [input-key (element-name :evt evt (:keywordize-keys @state))
+        input-value (element-value evt)]
+    (swap! state update-in [:values name idx] assoc input-key input-value)))
+
+(defn fieldarray-handle-blur
+  [evt state name idx]
+  (let [input-key (element-name :evt evt (:keywordize-keys @state))]
+    (swap! state update :touched conj [name idx input-key])))
+
+(defn set-handle-change
+  [{:keys [value path]} state]
+  (let [path (if (vector? path) path [path])]
+    (swap! state assoc-in (cons :values path) value)))
+
+(defn set-handle-blur
+  [{:keys [value path]} state]
+  (let [path (if (vector? path) path [path])]
+    (swap! state update :touched (if value conj disj) path)))
+
+(defn fieldarray-add
+  [state name m]
+  (swap! state update-in [:values name] (fnil conj []) m))
+
+(defn- fieldarray-update-touched
+  [touched name idx]
+  (into #{} (keep (fn [el]
+                    (if (or (not (vector? el))
+                            (and (vector? el)
+                                 (not= name (first el))))
+                      ;;to return touched element if it's not the fieldarray in question
+                      el
+                      ;; to delete and update indexes of fieldarray
+                      (let [[n curr-idx k] el]
+                        (cond
+                          (> curr-idx idx) [n (dec curr-idx) k]
+                          (< curr-idx idx) el
+                          :else nil)))) touched)))
+
+(defn fieldarray-remove
+  [state name idx]
+  (swap! state (fn [s]
+                 (-> s
+                     (update-in [:values name] vec-remove idx)
+                     (update :touched #(fieldarray-update-touched % name idx))))))
 
 (defn dirty
   [values initial-values]
@@ -126,9 +171,9 @@
 (defn handle-submit
   [evt {:keys [state server on-submit prevent-default?
                initial-values touched-values path
-               validation form-id reset]}]
+               validation reset]}]
   (when prevent-default? (.preventDefault evt))
-  (on-submit-state-updates state form-id)
+  (swap! state update :attempted-submissions inc)
   (when (and (nil? validation) (every? #(false? (:waiting? %)) (vals server)))
     (swap! state update :successful-submissions inc)
     (on-submit
@@ -176,3 +221,34 @@
                                 throttle))))
       :else
       (http-fn props))))
+
+(defn field-array
+  [props _]
+  (let [state (get-in props [:props :state])
+        name (:name props)
+        handlers {:set-handle-change
+                  #(set-handle-change % state)
+                  :set-handle-blur
+                  #(set-handle-blur % state)
+                  :handle-change
+                  (fn [evt idx] (fieldarray-handle-change
+                                 evt state name idx))
+                  :handle-blur
+                  (fn [evt idx] (fieldarray-handle-blur
+                                 evt state name idx))
+                  :remove
+                  (fn [idx] (fieldarray-remove state name idx))
+                  :insert
+                  (fn [m] (fieldarray-add state name m))}]
+    (fn [{:keys [props] :as args} component]
+      (let [fields (get (:values props) name)]
+        [component props
+         {:fieldarray/name name
+          :fieldarray/options (:options args)
+          :fieldarray/fields fields
+          :fieldarray/insert (:insert handlers)
+          :fieldarray/remove (:remove handlers)
+          :fieldarray/set-handle-change (:set-handle-change handlers)
+          :fieldarray/set-handle-blur (:set-handle-blur handlers)
+          :fieldarray/handle-change (:handle-change handlers)
+          :fieldarray/handle-blur (:handle-blur handlers)}]))))
