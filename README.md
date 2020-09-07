@@ -130,7 +130,7 @@ As a solution, you might keep the anonymous function in place as long as you rem
    ;; Its possible values are nil or a map of changed values
    {:db (fork/set-submitting db path true)
     :dispatch-later [{:ms 1000
-                      :disptach [:resolved-form path values]}]}))
+                      :dispatch [:resolved-form path values]}]}))
 
 (rf/reg-event-fx
  :resolved-form
