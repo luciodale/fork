@@ -250,7 +250,7 @@ You probably want to know more than the same old *Hello World* demonstration. He
                 handle-change
                 handle-blur
                 submitting?
-				on-submit-server-message
+		on-submit-server-message
                 handle-submit]}]
      [:form
       {:id form-id
@@ -397,13 +397,13 @@ Since version `1.1.0`, the handler `send-server-request` provides a way of perfo
 (defn foo []
   [fork/form {:path :form ;; or [:path :to :form]
               :prevent-default? true
-			  :validation #(cond-> {}
+	      :validation #(cond-> {}
                               (empty? (get % "email"))
                               (assoc "email" "Email can't be empty"))
               :on-submit #(js/alert %)}
    (fn [{:keys [form-id
                 values
-				server-errors
+		server-errors
                 handle-change
                 handle-blur
                 handle-submit
@@ -420,12 +420,12 @@ Since version `1.1.0`, the handler `send-server-request` provides a way of perfo
                       (handle-change evt)
                       (send-server-request
                        {:name "email"
-					    ;; this retrieves the most up to date value
+			;; this retrieves the most up to date value
                         :value (fork/retrieve-event-value evt)
-						;; defaults to true
-						:set-waiting? true
-						;; to clean up relevant state before each http request
-						:clean-on-refetch ["email"]
+			;; defaults to true
+			:set-waiting? true
+			;; to clean up relevant state before each http request
+			:clean-on-refetch ["email"]
                         :debounce 500}
                        #(rf/dispatch [:server-request %])))}]
 	   [:div (or (get errors "email")
