@@ -15,9 +15,25 @@
   [state path message]
   (core/set-server-message state path message))
 
+(defn set-error
+  [state path input-name message]
+  (core/set-error state path input-name message))
+
 (defn retrieve-event-value
   [evt]
   (core/element-value evt))
+
+(defn- server-dispatch-logic
+  [state config path]
+  (let [set-waiting? (core/config-set-waiting? config)
+        input-names (:clean-on-refetch config)]
+    (swap! state (fn [s]
+                   (cond-> s
+                     (not-empty input-names)
+                     (update-in path (fn [m] (apply update m :server dissoc input-names)))
+
+                     set-waiting?
+                     (core/set-waiting path (:name config) true))))))
 
 (defn field-array
   [props component]
@@ -49,13 +65,10 @@
                     (core/send-server-request
                      callback (merge config
                                      props
-                                     {:state state
-                                      :set-waiting-true
-                                      (fn [input-name]
-                                        (swap! state #(core/set-waiting %
-                                                                        path
-                                                                        input-name
-                                                                        true)))})))
+                                     {:path path
+                                      :state state
+                                      :server-dispatch-logic
+                                      #(server-dispatch-logic state config path)})))
                   :reset (fn [& [m]] (reset! state (merge {:values {}
                                                            :touched #{}}
                                                           m)))}]
@@ -67,7 +80,10 @@
       (fn [props component]
         (let [validation (when-let [val-fn (:validation props)]
                            (core/handle-validation @state val-fn))
-              on-submit-server-message (get-in @state (concat path [:server-message]))]
+              server-validation (core/resolve-server-validation
+                                 (get-in @state (conj path :server)))
+              on-submit-server-message (get-in @state (concat path [:server-message]))
+              submitting? (get-in @state (concat path [:submitting?]))]
           [component
            {:props (:props props)
             :state state
@@ -75,11 +91,12 @@
             :form-id form-id
             :values (:values @state)
             :errors validation
+            :server-errors server-validation
             :on-submit-server-message on-submit-server-message
             :touched (:touched handlers)
             :set-touched (:set-touched handlers)
             :set-untouched (:set-untouched handlers)
-            :submitting? (get-in @state (concat path [:submitting?]))
+            :submitting? submitting?
             :attempted-submissions (or (:attempted-submissions @state) 0)
             :successful-submissions (or (:successful-submissions @state) 0)
             :set-values (:set-values handlers)
@@ -100,4 +117,5 @@
                                                              :server (get-in @state (concat path [:server]))
                                                              :form-id form-id
                                                              :validation validation
+                                                             :already-submitting? submitting?
                                                              :reset (:reset handlers)})))}]))})))

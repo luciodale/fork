@@ -70,6 +70,24 @@
   [db path message]
   (assoc-in db (concat (vectorize-path path) [:server-message]) message))
 
+(defn set-error
+  [db path input-name message]
+  (assoc-in db (concat (vectorize-path path) [:server input-name :errors]) message))
+
+(defn resolve-server-validation
+  [m]
+  (not-empty
+   (into {}
+         (keep (fn [[k v]]
+                 (when-let [err (:errors v)]
+                   {k err}))
+               m))))
+
+(defn config-set-waiting?
+  [config]
+  (let [x (get config :set-waiting? :no-key)]
+    (if (= :no-key x) true x)))
+
 (defn set-touched
   [names state]
   (swap! state update :touched
@@ -171,10 +189,13 @@
 (defn handle-submit
   [evt {:keys [state server on-submit prevent-default?
                initial-values touched-values path
-               validation reset]}]
+               validation already-submitting? reset]}]
   (when prevent-default? (.preventDefault evt))
   (swap! state update :attempted-submissions inc)
-  (when (and (nil? validation) (every? #(false? (:waiting? %)) (vals server)))
+  (when (and (not already-submitting?)
+             (nil? validation)
+             (nil? (resolve-server-validation server))
+             (every? #(false? (:waiting? %)) (vals server)))
     (swap! state update :successful-submissions inc)
     (on-submit
      {:state state
@@ -186,7 +207,7 @@
 
 (defn send-server-request
   [http-fn
-   {:keys [state validation evt name value path set-waiting-true
+   {:keys [state validation evt name value path server-dispatch-logic
            debounce throttle initial-values touched-values]}]
   (let [input-key name
         input-value value
@@ -205,7 +226,7 @@
                :values values
                :touched touched
                :state state}]
-    (set-waiting-true input-key)
+    (server-dispatch-logic)
     (cond
       debounce (do
                  (js/clearTimeout (get-in @state [:debounce input-key]))

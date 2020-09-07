@@ -16,9 +16,22 @@
   [db path message]
   (core/set-server-message db path message))
 
+(defn set-error
+  [state path input-name message]
+  (core/set-error state path input-name message))
+
 (defn retrieve-event-value
   [evt]
   (core/element-value evt))
+
+(rf/reg-event-db
+ ::server-dispatch-logic
+ (fn [db [_ config path]]
+   (let [set-waiting? (core/config-set-waiting? config)
+         input-names (:clean-on-refetch config)]
+     (cond-> db
+       (seq input-names) (update-in path (fn [m] (apply update m :server dissoc input-names)))
+       set-waiting? (assoc-in (concat path [:server (:name config) :waiting?]) true)))))
 
 (rf/reg-event-db
  ::server-set-waiting
@@ -69,10 +82,8 @@
                                      props
                                      {:path path
                                       :state state
-                                      :set-waiting-true
-                                      (fn [input-name]
-                                        (rf/dispatch [::server-set-waiting
-                                                      path input-name true]))})))
+                                      :server-dispatch-logic
+                                      #(rf/dispatch [::server-dispatch-logic config path])})))
                   :reset (fn [& [m]]
                            (reset! state (merge {:values {} :touched #{}} m))
                            (rf/dispatch [::clean path]))}]
@@ -89,6 +100,7 @@
         (let [db @(rf/subscribe [::db path])
               validation (when-let [val-fn (:validation props)]
                            (core/handle-validation @state val-fn))
+              server-validation (core/resolve-server-validation (:server db))
               on-submit-server-message (:server-message db)]
           [component
            {:props (:props props)
@@ -98,6 +110,7 @@
             :form-id form-id
             :values (:values @state)
             :errors validation
+            :server-errors server-validation
             :on-submit-server-message on-submit-server-message
             :touched (:touched handlers)
             :set-touched (:set-touched handlers)
@@ -119,9 +132,8 @@
             :handle-submit #(core/handle-submit % (merge props
                                                          {:state state
                                                           :path path
-                                                           :set-submitting (fn [db bool]
-                                                                             (set-submitting db path bool))
-                                                           :server (:server db)
-                                                           :form-id form-id
-                                                           :validation validation
-                                                           :reset (:reset handlers)}))}]))})))
+                                                          :server (:server db)
+                                                          :form-id form-id
+                                                          :validation validation
+                                                          :already-submitting? (:submitting? db)
+                                                          :reset (:reset handlers)}))}]))})))

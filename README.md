@@ -382,16 +382,28 @@ Since version `1.1.0`, the handler `send-server-request` provides a way of perfo
 
 (rf/reg-event-fx
  :response
- (fn [{db :db} [_ {:keys [values path]}]]
-   ;; so that the form can be submitted
-   {:db (fork/set-waiting db path "email" false)}))
+ (fn [{db :db}
+      [_ {:keys [state path values dirty errors touched]}]]
+   ;; only dispatch http request when client side errors are clear
+   (when (empty? (get errors "email"))
+     {:db
+      ;; assuming bar@foo.com is already taken
+      (if (not= "bar@foo.com" (get values "email"))
+        (fork/set-waiting db path "email" false)
+        (-> db
+            (fork/set-error path "email" "Email Already Exists")
+            (fork/set-waiting path "email" false)))})))
 
 (defn foo []
   [fork/form {:path :form ;; or [:path :to :form]
               :prevent-default? true
+			  :validation #(cond-> {}
+                              (empty? (get % "email"))
+                              (assoc "email" "Email can't be empty"))
               :on-submit #(js/alert %)}
    (fn [{:keys [form-id
                 values
+				server-errors
                 handle-change
                 handle-blur
                 handle-submit
@@ -410,8 +422,14 @@ Since version `1.1.0`, the handler `send-server-request` provides a way of perfo
                        {:name "email"
 					    ;; this retrieves the most up to date value
                         :value (fork/retrieve-event-value evt)
+						;; defaults to true
+						:set-waiting? true
+						;; to clean up relevant state before each http request
+						:clean-on-refetch ["email"]
                         :debounce 500}
                        #(rf/dispatch [:server-request %])))}]
+	   [:div (or (get errors "email")
+	             (get server-errors "email"))]
        [:button
         {:type "submit"}
         "Submit"]]])])
@@ -428,6 +446,10 @@ After destructuring `:send-server-request`, this function is invoked within the 
  :value (fork/retrieve-event-value evt)
  ;; OPTIONAL - relevant in the :on-blur case as it sets the `touched` property
  :evt :on-change
+ ;; OPTIONAL - to stop the form from submitting while the server request is being processed
+ :set-waiting? true
+ ;; OPTIONAL - gets rid of any metadata about the provided keys at each server request
+ :clean-on-refetch ["email"]
  ;; OPTIONAL & MUTUALLY EXCLUSIVE
  :throttle 500
  :debounce 500}
@@ -439,7 +461,7 @@ To prevent the form submission while waiting for a server response, a `:waiting?
 
 ### Global accessible helpers
 
-There are three global helpers: `set-waiting`, `set-submitting`, and `set-server-message`.
+There are several global helpers: `set-waiting`, `set-submitting`, `set-server-message`, and `set-error`.
 
 Note that they do not include side effects at their core. Contrarily, they are meant to simply operate on the old state in order to return the updated one.
 
@@ -473,6 +495,7 @@ You bet it does. The keys you can currently access from your form function are:
    values
    form-id
    errors
+   server-errors
    touched
    set-touched
    set-untouched
