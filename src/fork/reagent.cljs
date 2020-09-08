@@ -69,8 +69,9 @@
                                       :state state
                                       :server-dispatch-logic
                                       #(server-dispatch-logic state config path)})))
-                  :reset (fn [& [m]] (reset! state (merge {:values {}
-                                                           :touched #{}}
+                  :reset (fn [& [m]] (reset! state (merge (when (:keywordize-keys props)
+                                                            {:keywordize-keys true})
+                                                          {:values {} :touched #{}}
                                                           m)))}]
     (r/create-class
      {:component-did-mount
