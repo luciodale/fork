@@ -520,14 +520,13 @@ The field array becomes useful when the user might provide zero, one, or many en
     fields)
    [:button
     {:type "button"
-     :on-click #(insert {"name" "" "last-name" ""})}
+     :on-click #(insert {"first-name" "" "last-name" ""})}
     "Add new person"]])
 
 (defn fork-fieldarray []
   [fork/form
    {:on-submit #(js/alert (:values %))
-    :initial-values {"siblings" [{"first-name" ""
-                                  "last-name" ""}]}
+    :initial-values {"siblings" [{"first-name" "" "last-name" ""}]}
     :prevent-default? true}
    (fn [{:keys [handle-submit] :as props}]
      [:div
