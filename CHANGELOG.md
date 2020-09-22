@@ -100,3 +100,7 @@ All notable changes to this project will be documented in this file.
 ## [2.1.8]
 ### Changed
 - `path` option takes a vector of keys or a single key identifier for backward compatibility
+
+## [2.2.2]
+### Added
+- `fork/field-array`, `set-handle-change`, `set-handle-blur`
