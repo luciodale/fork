@@ -482,6 +482,68 @@ The reason behind their side effect free design is to make them composable, thus
 (swap! state update :some-key inc)
 ```
 
+### Field Array
+
+The field array becomes useful when the user might provide zero, one, or many entries for a specific form component. For instance, let's assume we want to collect the user siblings' name. Clearly, there is no way of knowing in advance how many siblings the user has, so we can provide a field array to solve the issue.
+
+```clojure
+(defn field-array-fn
+  [_props
+   {:fieldarray/keys [fields
+                      insert
+                      remove
+                      handle-change
+                      handle-blur]}]
+  [:<>
+   (map-indexed
+    (fn [idx field]
+      ^{:key idx}
+      [:div
+       [:div
+        [:label "First Name"]
+        [:input
+         {:name "first-name"
+          :value (get field "first-name")
+          :on-change #(handle-change % idx)
+          :on-blur #(handle-blur % idx)}]]
+       [:div
+        [:label "Last Name"]
+        [:input
+         {:name "last-name"
+          :value (get field "last-name")
+          :on-change #(handle-change % idx)
+          :on-blur #(handle-blur % idx)}]]
+       [:button
+        {:type "button"
+         :on-click #(when (> (count fields) 1) (remove idx))}
+        [:span "Remove"]]])
+    fields)
+   [:button
+    {:type "button"
+     :on-click #(insert {"name" "" "last-name" ""})}
+    "Add new person"]])
+
+(defn fork-fieldarray []
+  [fork/form
+   {:on-submit #(js/alert (:values %))
+    :initial-values {"siblings" [{"first-name" ""
+                                  "last-name" ""}]}
+    :prevent-default? true}
+   (fn [{:keys [handle-submit] :as props}]
+     [:div
+      [:form
+       {:on-submit handle-submit}
+       [:h2 "Siblings"]
+       [:div
+        [fork/field-array {:props props
+                           :name "siblings"}
+         field-array-fn]
+        [:br][:br]
+        [:div [:button "Submit"]]]]])])
+```
+
+The `field-array-fn` must be a different reagent component to avoid the inputs focus loss. 
+
 ### Does Fork do anything else for me?
 
 You bet it does. The keys you can currently access from your form function are:
@@ -507,6 +569,8 @@ You bet it does. The keys you can currently access from your form function are:
    disable
    enable
    disabled?
+   set-handle-change
+   set-handle-blur
    handle-change
    handle-blur
    handle-submit
@@ -553,6 +617,14 @@ Here is a demonstration on how to use the above handlers that have not been ment
  :name (normalize-name :foo/bar)
  :disabled (disabled? "input")
  ...}]
+ 
+(set-handle-change
+ {:value "Joe" ;; or (fn [previous-val] "Joe") 
+  :path ["name"]})
+  
+(set-handle-blur
+ {:value true
+  :path ["name"]})  
 ```
 
 For what concerns the `:props` key, you can use it as a way of passing arguments to the form component. Here is a quick example:
