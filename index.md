@@ -1,6 +1,4 @@
-++++
-<link rel="stylesheet" href="/docs.css"/>
-++++
+<link rel="stylesheet" href="/fork/docs.css"/>
 
 ## Welcome to GitHub Pages
 
@@ -12,17 +10,13 @@ Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://j
 
 Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
 
-++++
 <div class="section">
 <div id="fork-form1"></div>
 </div>
-++++
 
-++++
 <div class="section">
 <div id="fork-form2"></div>
 </div>
-++++
 
 ```markdown
 Syntax highlighted code block
@@ -52,6 +46,5 @@ Your Pages site will use the layout and styles from the Jekyll theme you have se
 
 Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
 
-++++
-<script src="/frontend.js"></script>
-++++
+
+<script src="/fork/frontend.js"></script>
