@@ -10,7 +10,7 @@ Yet another Form Library to add to the list. Inspired by [Formik](https://github
 
 <img src="https://s5.gifyu.com/images/a-2019-12-19_153050.gif" width="80%" />
 
-[Live demo](https://juxt.pro/blog/posts/clojurescript-form-library.html)
+[Live demo](https://luciodale.github.io/fork/)
 
 ## Why Fork?
 Forms are hard. Orchestrating their ever changing state, complex logic, and rich UI elements is quite a challenging task.
