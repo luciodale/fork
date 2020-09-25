@@ -3,25 +3,86 @@
     <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width,initial-scale=1" />
-	<title>Fork</title>
-        <link rel="stylesheet" href="/fork/docs.css"/>
+	<title>Examples</title>
+	<link rel="stylesheet" href="https://unpkg.com/react-dates@16.3.2/lib/css/_datepicker.css"/>
+	<link rel="stylesheet" href="/react_dates.css">
+
+	<link rel="stylesheet" href="/fork.css">
+	<script src="/highlight.pack.js"></script>
     </head>
     <body>
-	<div>
-	    Whenever you commit to this repository, GitHub Pages will run to rebuild the pages in your site, from the content in your Markdown files.
+	<script>
+	 function toggleDropdown(id, overlayId) {
+	     let el = document.getElementById(id);
+	     let toggledClass = "nav-dropdown__list--toggled";
+
+	     let overlayEl = document.getElementById(overlayId);
+
+	     if(el.classList.contains(toggledClass)) {
+		 el.classList.remove(toggledClass);
+		 overlayEl.style.display = "none";
+
+	     } else {
+		 el.classList.add(toggledClass);
+		 overlayEl.style.display = "block";
+	     }
+	 }
+
+	 function toggleDropdownMobile(id) {
+	     let el = document.getElementById(id);
+	     let toggledClass = "nav-dropdown__list-toggled--mobile";
+
+	     let res = document.getElementById("resources-link-mobile");
+
+	     if(el.classList.contains(toggledClass)) {
+		 el.classList.remove(toggledClass);
+		 res.style.background = "#292c31";
+	     } else {
+		 el.classList.add(toggledClass);
+		 res.style.background = "#25282c";
+	     }
+	 }
+
+	 function toggleMenu() {
+	     let el = document.getElementById("menu-mobile");
+	     let toggledClass = "nav-menu__mobile--toggled";
+
+	     if(el.classList.contains(toggledClass)) {
+		 el.classList.remove(toggledClass);
+	     } else {
+		 el.classList.add(toggledClass);
+	     }
+	 }
+
+	</script>
+	<div class="navigation">
+	    <div class="navbar">
+		<div class="nav-container">
+		    <a href="" class="brand">
+			<img src="/images/fork-logo.png" />
+		    </a>
+		    <div class="hamburger" onclick="toggleMenu()">
+			<svg height="28px" viewBox="0 0 32 32" width="32px">
+			    <path  fill="#222222" d="M4,10h24c1.104,0,2-0.896,2-2s-0.896-2-2-2H4C2.896,6,2,6.896,2,8S2.896,10,4,10z M28,14H4c-1.104,0-2,0.896-2,2  s0.896,2,2,2h24c1.104,0,2-0.896,2-2S29.104,14,28,14z M28,22H4c-1.104,0-2,0.896-2,2s0.896,2,2,2h24c1.104,0,2-0.896,2-2  S29.104,22,28,22z"/></svg>
+		    </div>
+
+		    <nav class="nav-menu__mobile" id="menu-mobile">
+			<a href="" class="nav-menu__link--mobile nav-menu__link--visited"> Examples </a>
+			<a href="https://github.com/luciodale/fork" class="nav-menu__link--mobile">
+			    <img src="/images/github-light.png" width="18px" class="link-github--mobile"/>
+			</a>
+		    </nav>
+
+		    <nav class="nav__menu">
+			<a href="" class="nav-menu__link--mobile nav-menu__link--visited"> Examples </a>
+			<a href="https://github.com/luciodale/fork" class="nav-menu__link">
+			    <img src="/images/github-black.png" width="18px" class="link-github--desktop"/>
+			</a>
+		    </nav>
+		</div>
+	    </div>
 	</div>
-
-	<div class="section">
-	    <div id="fork-form1"></div>
-	</div>
-
-	<div class="section">
-	    <div id="fork-form2"></div>
-	</div>
-
-	Having trouble with Pages?
-
-	<script src="/fork/highlight.pack.js"></script>
-	<script src="/fork/frontend.js"></script>
+	<div id="app"></div>
+	<script src="/frontend.js"></script>
     </body>
 </html>
