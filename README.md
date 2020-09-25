@@ -33,7 +33,7 @@ As at this state you must be dying of curiosity, I will dive right into the impl
 #### In Deps
 
 ```clojure
-fork {:mvn/version "2.2.2"}
+fork {:mvn/version "2.2.3"}
 ```
 
 or
@@ -541,7 +541,7 @@ The field array becomes useful when the user might provide zero, one, or many en
         [:div [:button "Submit"]]]]])])
 ```
 
-The `field-array-fn` must be a different reagent component to avoid the inputs focus loss. 
+The `field-array-fn` must be a different reagent component to avoid the inputs focus loss.
 
 ### Does Fork do anything else for me?
 
@@ -554,6 +554,7 @@ You bet it does. The keys you can currently access from your form function are:
    state
    reset
    values
+   dirty
    form-id
    errors
    server-errors
@@ -616,14 +617,14 @@ Here is a demonstration on how to use the above handlers that have not been ment
  :name (normalize-name :foo/bar)
  :disabled (disabled? "input")
  ...}]
- 
+
 (set-handle-change
- {:value "Joe" ;; or (fn [previous-val] "Joe") 
+ {:value "Joe" ;; or (fn [previous-val] "Joe")
   :path ["name"]})
-  
+
 (set-handle-blur
  {:value true
-  :path ["name"]})  
+  :path ["name"]})
 ```
 
 For what concerns the `:props` key, you can use it as a way of passing arguments to the form component. Here is a quick example:
