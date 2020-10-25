@@ -150,8 +150,11 @@
   [{:keys [value path]} state]
   (let [path (if (vector? path) path [path])
         current-value (get-in @state (cons :values path))
-        new-value (doall (if (fn? value) (value current-value) value))]
-    (swap! state assoc-in (cons :values path) new-value)))
+        new-value (if (fn? value) (value current-value) value)
+        resolved-new-value (if (seq? new-value)
+                             (doall new-value)
+                             new-value)]
+    (swap! state assoc-in (cons :values path) resolved-new-value)))
 
 (defn set-handle-blur
   [{:keys [value path]} state]
