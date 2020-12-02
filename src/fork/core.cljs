@@ -1,7 +1,8 @@
 (ns fork.core
   (:require
    [clojure.data :as data]
-   [clojure.walk :as walk]))
+   [clojure.walk :as walk]
+   [reagent.core :as r]))
 
 (defn- vec-remove
   [coll pos]
@@ -17,12 +18,16 @@
   (let [kw? (:keywordize-keys props)
         values (or (merge (:initial-values props)
                           (:initial-touched props))
-                   {})]
-    {:keywordize-keys (:keywordize-keys props)
-     :values (if kw? (walk/keywordize-keys values) values)
-     ;; TODO - support nested initial-touched keys
-     :touched (into #{} (map (if kw? keyword identity)
-                             (keys (:initial-touched props))))}))
+                   {})
+        initialized-state {:keywordize-keys (:keywordize-keys props)
+                           :values (if kw? (walk/keywordize-keys values) values)
+                           ;; TODO - support nested initial-touched keys
+                           :touched (into #{} (map (if kw? keyword identity)
+                                                   (keys (:initial-touched props))))}]
+    (if-let [user-provided-state (:state props)]
+      (do (swap! user-provided-state merge initialized-state)
+          user-provided-state)
+      (r/atom initialized-state))))
 
 (defn element-value
   [evt]

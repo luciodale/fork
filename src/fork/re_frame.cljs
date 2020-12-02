@@ -56,7 +56,7 @@
 
 (defn form
   [props _]
-  (let [state (r/atom (core/initialize-state props))
+  (let [state (core/initialize-state props)
         p (:path props)
         path (cond
                (and p (vector? p)) p

@@ -33,7 +33,7 @@ As at this state you must be dying of curiosity, I will dive right into the impl
 #### In Deps
 
 ```clojure
-fork {:mvn/version "2.2.4"}
+fork {:mvn/version "2.2.5"}
 ```
 
 or
@@ -177,6 +177,8 @@ If some parts look a bit obscure, the will be explained thoroughly in the follow
 #### Params
 
 `:form-id` makes fork aware of your form elements. If it is not specified, a random id will be generated and will be provided through the same `:form-id` key. - Key
+
+`:state` lets you pass a ratom that will be used as a db. Useful if you need to access it outside the fork component. - Ratom
 
 `:path` lets you choose where to store your form global events i.e. server related stuff. - Keyword/String OR Vector of keys
 
