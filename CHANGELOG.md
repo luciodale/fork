@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.2.6]
+### Added
+- `:keywordize-top-level-keys` to main props to only keywordize top-level-key values
+
 ## [2.2.5]
 ### Added
 - `state` to main props to allow users to pass their own ratoms

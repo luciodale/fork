@@ -33,7 +33,7 @@ As at this state you must be dying of curiosity, I will dive right into the impl
 #### In Deps
 
 ```clojure
-fork {:mvn/version "2.2.5"}
+fork {:mvn/version "2.2.6"}
 ```
 
 or
@@ -183,6 +183,8 @@ If some parts look a bit obscure, the will be explained thoroughly in the follow
 `:path` lets you choose where to store your form global events i.e. server related stuff. - Keyword/String OR Vector of keys
 
 `:keywordize-keys` allows you to work with keywords instead of strings. - Boolean
+
+`:keywordize-top-level-keys` allows you to work with top level keywords instead of strings. - Boolean
 
 `:prevent-default?` does not automatically send your form to the server on submit. - Boolean
 

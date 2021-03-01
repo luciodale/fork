@@ -16,11 +16,15 @@
 (defn initialize-state
   [props]
   (let [kw? (:keywordize-keys props)
+        only-top-level-kw? (:keywordize-top-level-keys props)
         values (or (merge (:initial-values props)
                           (:initial-touched props))
                    {})
         initialized-state {:keywordize-keys (:keywordize-keys props)
-                           :values (if kw? (walk/keywordize-keys values) values)
+                           :values (cond
+                                     kw? (walk/keywordize-keys values)
+                                     only-top-level-kw? (into {} (mapv (fn [k v] [(keyword k) v]) values))
+                                     :else values)
                            ;; TODO - support nested initial-touched keys
                            :touched (into #{} (map (if kw? keyword identity)
                                                    (keys (:initial-touched props))))}]
