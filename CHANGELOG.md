@@ -1,9 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [2.2.6]
-### Added
-- `:keywordize-top-level-keys` to main props to only keywordize top-level-key values
+## [2.2.7]
+### Changed
+- Remove keywordization logic on init values
 
 ## [2.2.5]
 ### Added

@@ -33,7 +33,7 @@ As at this state you must be dying of curiosity, I will dive right into the impl
 #### In Deps
 
 ```clojure
-fork {:mvn/version "2.2.6"}
+fork {:mvn/version "2.2.7"}
 ```
 
 or
@@ -183,8 +183,6 @@ If some parts look a bit obscure, the will be explained thoroughly in the follow
 `:path` lets you choose where to store your form global events i.e. server related stuff. - Keyword/String OR Vector of keys
 
 `:keywordize-keys` allows you to work with keywords instead of strings. - Boolean
-
-`:keywordize-top-level-keys` allows you to work with top level keywords instead of strings. - Boolean
 
 `:prevent-default?` does not automatically send your form to the server on submit. - Boolean
 
@@ -371,7 +369,7 @@ and pass the password value when giving the function to *Fork* i.e.
 
 ### Keywords as input names
 
-By passing the option `{:keywordize-keys true}` to *Fork*, the values and all other state keys will be keywords instead of strings. To make sure the input names are properly registered, use the function `normalize-name` available in the props, when giving the name to the input components i.e. `{:name (normalize-name :bar/foo)}`. Namespaced keys are also supported. If `normalize-name` is used when `keywordize-keys` is not set, the function will simply return the same value.
+By passing the option `{:keywordize-keys true}` to *Fork*, the values and all other state keys will be treated as keywords instead of strings. To make sure the input names are properly registered, use the function `normalize-name` available in the props, when giving the name to the input components i.e. `{:name (normalize-name :bar/foo)}`. Namespaced keys are also supported. If `normalize-name` is used when `keywordize-keys` is not set, the function will simply return the same value.
 
 ### Dealing with server requests
 
