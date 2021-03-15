@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.2.8]
+### Fix
+- Fixed a bug involving touched fn introduced in 2.2.7
+
 ## [2.2.7]
 ### Changed
 - Remove keywordization logic on init values

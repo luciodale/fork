@@ -19,7 +19,8 @@
                           (:initial-touched props))
                    {})
         initialized-state {:keywordize-keys (:keywordize-keys props)
-                           :values values}]
+                           :values values
+                           :touched (into #{} (keys (:initial-touched props)))}]
     (if-let [user-provided-state (:state props)]
       (do (swap! user-provided-state merge initialized-state)
           user-provided-state)
