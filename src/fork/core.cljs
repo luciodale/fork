@@ -1,7 +1,6 @@
 (ns fork.core
   (:require
    [clojure.data :as data]
-   [clojure.walk :as walk]
    [reagent.core :as r]))
 
 (defn- vec-remove
@@ -138,19 +137,21 @@
     (swap! state update :touched conj input-key)))
 
 (defn fieldarray-handle-change
-  [evt state name idx]
-  (let [input-key (element-name :evt evt (:keywordize-keys @state))
+  [evt state vec-field-array-key idx]
+  (let [path (conj vec-field-array-key idx)
+        input-key (element-name :evt evt (:keywordize-keys @state))
         input-value (element-value evt)]
-    (swap! state update-in [:values name idx] assoc input-key input-value)))
+    (swap! state update-in (cons :values path) assoc input-key input-value)))
 
 (defn fieldarray-handle-blur
-  [evt state name idx]
-  (let [input-key (element-name :evt evt (:keywordize-keys @state))]
-    (swap! state update :touched conj [name idx input-key])))
+  [evt state vec-field-array-key idx]
+  (let [input-key (element-name :evt evt (:keywordize-keys @state))
+        path (conj vec-field-array-key idx input-key)]
+    (swap! state update :touched conj path)))
 
 (defn set-handle-change
   [{:keys [value path]} state]
-  (let [path (if (vector? path) path [path])
+  (let [path (vectorize-path path)
         current-value (get-in @state (cons :values path))
         new-value (if (fn? value) (value current-value) value)
         resolved-new-value (if (seq? new-value)
@@ -160,34 +161,39 @@
 
 (defn set-handle-blur
   [{:keys [value path]} state]
-  (let [path (if (vector? path) path [path])]
+  (let [path (vectorize-path path)]
     (swap! state update :touched (if value conj disj) path)))
 
-(defn fieldarray-add
-  [state name m]
-  (swap! state update-in [:values name] (fnil conj []) m))
+(defn fieldarray-insert
+  [state vec-field-array-key m]
+  (swap! state update-in (cons :values vec-field-array-key) (fnil conj []) m))
 
 (defn- fieldarray-update-touched
-  [touched name idx]
-  (into #{} (keep (fn [el]
-                    (if (or (not (vector? el))
-                            (and (vector? el)
-                                 (not= name (first el))))
-                      ;;to return touched element if it's not the fieldarray in question
-                      el
-                      ;; to delete and update indexes of fieldarray
-                      (let [[n curr-idx k] el]
-                        (cond
-                          (> curr-idx idx) [n (dec curr-idx) k]
-                          (< curr-idx idx) el
-                          :else nil)))) touched)))
+  [touched path idx]
+  (let [path-count (count path)]
+    (->> touched
+         (keep (fn [touched-el]
+                 (if ;; to filter out only the relevant fieldarray groups
+                     (and (vector? touched-el)
+                          (= path (vec (take path-count touched-el))))
+                   (let [[position curr-idx] (->> touched-el
+                                                  (map-indexed #(when (number? %2) [%1 %2]))
+                                                  (remove nil?)
+                                                  (last))]
+                     (cond
+                       (> curr-idx idx) (update touched-el position dec)
+                       (< curr-idx idx) touched-el
+                       ;; remove field array group being deleted
+                       :else nil))
+                   touched-el)))
+         (into #{}))))
 
 (defn fieldarray-remove
-  [state name idx]
+  [state vec-field-array-key idx]
   (swap! state (fn [s]
                  (-> s
-                     (update-in [:values name] vec-remove idx)
-                     (update :touched #(fieldarray-update-touched % name idx))))))
+                     (update-in (cons :values vec-field-array-key) vec-remove idx)
+                     (update :touched #(fieldarray-update-touched % vec-field-array-key idx))))))
 
 (defn dirty
   [values initial-values]
@@ -250,30 +256,40 @@
       :else
       (http-fn props))))
 
+(defn fieldarray-touched
+  [state vec-field-array-key idx input-key]
+  (or (:attempted-submissions @state)
+      (get (:touched @state) (conj vec-field-array-key idx input-key))))
+
 (defn field-array
   [props _]
   (let [state (get-in props [:props :state])
-        name (:name props)
+        field-array-key (:name props)
+        vec-field-array-key (vectorize-path field-array-key)
         handlers {:set-handle-change
                   #(set-handle-change % state)
                   :set-handle-blur
                   #(set-handle-blur % state)
                   :handle-change
                   (fn [evt idx] (fieldarray-handle-change
-                                 evt state name idx))
+                                 evt state vec-field-array-key idx))
                   :handle-blur
                   (fn [evt idx] (fieldarray-handle-blur
-                                 evt state name idx))
+                                 evt state vec-field-array-key idx))
                   :remove
-                  (fn [idx] (fieldarray-remove state name idx))
+                  (fn [idx] (fieldarray-remove state vec-field-array-key idx))
                   :insert
-                  (fn [m] (fieldarray-add state name m))}]
+                  (fn [m] (fieldarray-insert state vec-field-array-key m))
+                  :touched
+                  (fn [idx input-key] (fieldarray-touched
+                                       state vec-field-array-key idx input-key))}]
     (fn [{:keys [props] :as args} component]
-      (let [fields (get (:values props) name)]
+      (let [fields (get-in (:values props) vec-field-array-key)]
         [component props
-         {:fieldarray/name name
+         {:fieldarray/name field-array-key
           :fieldarray/options (:options args)
           :fieldarray/fields fields
+          :fieldarray/touched (:touched handlers)
           :fieldarray/insert (:insert handlers)
           :fieldarray/remove (:remove handlers)
           :fieldarray/set-handle-change (:set-handle-change handlers)

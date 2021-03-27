@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.3.0]
+### Added
+- Add support for nested field arrays
+- Add :fieldarray/touched handler
+
 ## [2.2.8]
 ### Fix
 - Fixed a bug involving touched fn introduced in 2.2.7
