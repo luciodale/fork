@@ -4,6 +4,8 @@
    [fork.re-frame :as fork]
    [cljs.pprint :as pprint]))
 
+;; Showing nested field arrays and drag and drop on top level field arrays
+
 (defn field-array-2
   [{:keys [normalize-name]}
    {:fieldarray/keys [fields
@@ -45,16 +47,35 @@
                       remove
                       touched
                       handle-change
-                      handle-blur]}]
+                      handle-blur
+                      current-dragged-idx
+                      next-droppable-target
+                      prev-droppable-target
+                      drag-and-drop-handlers]}]
   [:div
    (doall
     (->> fields
          (map-indexed
           (fn [idx field]
             ^{:key (str name idx)}
-            [:div {:style {:padding "1em"
-                           :margin "1em"
-                           :background "blue"}}
+            [:div
+             (merge
+              (drag-and-drop-handlers :field-array-1 idx)
+              {:style (cond-> {:padding "1em"
+                               :margin "1em"
+                               :background "blue"}
+
+                        (= idx (current-dragged-idx :field-array-1))
+                        (assoc :opacity 0.5)
+
+                        (next-droppable-target :field-array-1 idx)
+                        (assoc :border-bottom "10px solid black")
+
+                        (prev-droppable-target :field-array-1 idx)
+                        (assoc :border-top "10px solid black"))})
+             [:div "DRAG ME!"]
+             [:br]
+             [:br]
              [:input
               {:name (normalize-name :field-array-1/input)
                :value (get field :field-array-1/input)
@@ -84,9 +105,15 @@
     [fork/form {:state state
                 :keywordize-keys true
                 :initial-values {:field-array-1
-                                 [{:field-array-1/input "hello"
+                                 [{:field-array-1/input "hello1"
                                    :field-array-2
-                                   [{:field-array-2/input "hello nested"}]}]}}
+                                   [{:field-array-2/input "hello nested1"}]}
+                                  {:field-array-1/input "hello2"
+                                   :field-array-2
+                                   [{:field-array-2/input "hello nested2"}]}
+                                  {:field-array-1/input "hello3"
+                                   :field-array-2
+                                   [{:field-array-2/input "hello nested3"}]}]}}
      (fn [props]
        [:form.manage-pages
         [fork/field-array {:props props

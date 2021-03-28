@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.4.0]
+### Added
+- Add support for fieldarray drag and drop (only top level fieldarrays)
+
 ## [2.3.0]
 ### Added
 - Add support for nested field arrays

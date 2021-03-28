@@ -31,7 +31,7 @@ As at this state you must be dying of curiosity, I will dive right into the impl
 #### In Deps
 
 ```clojure
-fork {:mvn/version "2.3.0"}
+fork {:mvn/version "2.4.0"}
 ```
 
 or
@@ -556,6 +556,12 @@ What follows is a list of the fieldarray available handlers:
 :fieldarray/set-handle-blur ;; same as the one in main props (see below)
 :fieldarray/handle-change ;; (handle-change evt idx)
 :fieldarray/handle-blur ;; (handle-blur evt idx)}
+:fieldarray/current-target-idx ;; returns idx of droppable item location (current-target-idx :field-array-key)
+:fieldarray/current-dragged-idx ;; returns idx of dragged item (current-dragged-idx :field-array-key)
+:fieldarray/next-droppable-target? ;; true if hovered item is > than dragged (next-droppable-target? :field-array-key idx)
+:fieldarray/prev-droppable-target? ;; true if hovered item is < than dragged (prev-droppable-target? :field-array-key idx)
+:fieldarray/drag-and-drop-handlers ;; all drag and drop handlers
+;; i.e. [:div (merge {:class ...} (drag-and-drop-handlers :field-array-key idx))]
 ```
 
 ### Does Fork do anything else for me?

@@ -7,6 +7,10 @@
   [coll pos]
   (vec (concat (subvec coll 0 pos) (subvec coll (inc pos)))))
 
+(defn vec-insert-at
+  [coll pos element]
+  (vec (concat (subvec coll 0 pos) [element] (subvec coll pos))))
+
 (defn touched
   [state k]
   (or (:attempted-submissions @state)
@@ -261,6 +265,40 @@
   (or (:attempted-submissions @state)
       (get (:touched @state) (conj vec-field-array-key idx input-key))))
 
+(defn handle-drag-start
+  [state k idx]
+  (swap! state (fn [old-state]
+                 (-> old-state
+                     (dissoc :drag-and-drop)
+                     (assoc-in [:drag-and-drop k :idx-of-item-being-dragged] idx)))))
+
+(defn handle-drag-end
+  [state]
+  (swap! state dissoc :drag-and-drop))
+
+(defn handle-drag-over [e] (.preventDefault e))
+
+(defn handle-drag-enter
+  [state k idx]
+  (swap! state assoc-in [:drag-and-drop k :idx-of-element-droppable-location] idx))
+
+(defn handle-drop
+  [state k vec-field-array-key]
+  (let [dragged-idx (get-in @state [:drag-and-drop k :idx-of-item-being-dragged])
+        dropped-idx (get-in @state [:drag-and-drop k :idx-of-element-droppable-location])]
+    (swap! state update-in (cons :values vec-field-array-key)
+           #(-> %
+                (vec-remove dragged-idx)
+                (vec-insert-at dropped-idx (get % dragged-idx))))))
+
+(defn current-target-idx
+  [state k]
+  (some-> @state :drag-and-drop k :idx-of-element-droppable-location))
+
+(defn current-dragged-idx
+  [state k]
+  (some-> @state :drag-and-drop k :idx-of-item-being-dragged))
+
 (defn field-array
   [props _]
   (let [state (get-in props [:props :state])
@@ -282,7 +320,34 @@
                   (fn [m] (fieldarray-insert state vec-field-array-key m))
                   :touched
                   (fn [idx input-key] (fieldarray-touched
-                                       state vec-field-array-key idx input-key))}]
+                                       state vec-field-array-key idx input-key))
+                  :current-target-idx
+                  (fn [k] (current-target-idx state k))
+                  :current-dragged-idx
+                  (fn [k] (current-dragged-idx state k))
+                  :next-droppable-target?
+                  (fn [k idx]
+                    (and (= idx (current-target-idx state k))
+                         (> idx (current-dragged-idx state k))))
+                  :prev-droppable-target?
+                  (fn [k idx]
+                    (and (= idx (current-target-idx state k))
+                         (< idx (current-dragged-idx state k))))
+                  :drag-and-drop-handlers
+                  (fn [k idx]
+                    (when (or (nil? (:drag-and-drop @state))
+                              (current-dragged-idx state k))
+                      {:draggable true
+                       :on-drag-start
+                       (fn [_] (handle-drag-start state k idx))
+                       :on-drag-end
+                       (fn [_] (handle-drag-end state))
+                       :on-drag-over
+                       (fn [evt] (handle-drag-over evt))
+                       :on-drag-enter
+                       (fn [_] (handle-drag-enter state k idx))
+                       :on-drop
+                       (fn [_] (handle-drop state k vec-field-array-key))}))}]
     (fn [{:keys [props] :as args} component]
       (let [fields (get-in (:values props) vec-field-array-key)]
         [component props
@@ -295,4 +360,9 @@
           :fieldarray/set-handle-change (:set-handle-change handlers)
           :fieldarray/set-handle-blur (:set-handle-blur handlers)
           :fieldarray/handle-change (:handle-change handlers)
-          :fieldarray/handle-blur (:handle-blur handlers)}]))))
+          :fieldarray/handle-blur (:handle-blur handlers)
+          :fieldarray/current-target-idx (:current-target-idx handlers)
+          :fieldarray/current-dragged-idx (:current-dragged-idx handlers)
+          :fieldarray/next-droppable-target? (:next-droppable-target? handlers)
+          :fieldarray/prev-droppable-target? (:prev-droppable-target? handlers)
+          :fieldarray/drag-and-drop-handlers (:drag-and-drop-handlers handlers)}]))))
