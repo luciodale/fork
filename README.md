@@ -541,7 +541,22 @@ The field array becomes useful when the user might provide zero, one, or many en
         [:div [:button "Submit"]]]]])])
 ```
 
-The `field-array-fn` must be a different reagent component to avoid the inputs focus loss.
+The `field-array-fn` must be a different reagent component to avoid the inputs focus loss. A comprehensive example of the fieldarray functionality can be found [here](https://github.com/luciodale/fork/blob/master/examples/fieldarray.cljs).
+
+What follows is a list of the fieldarray available handlers:
+
+```clojure
+:fieldarray/name ;; name chosen for the field array
+:fieldarray/options ;; it holds any user custom props they need in the fieldarray component scope
+:fieldarray/fields ;; the fieldarray data. It's a vector of maps
+:fieldarray/touched ;; (touched idx :my-input)
+:fieldarray/insert ;; (insert {:my-field-array-input "hello"})
+:fieldarray/remove ;; (remove idx)
+:fieldarray/set-handle-change ;; same as the one in main props (see below)
+:fieldarray/set-handle-blur ;; same as the one in main props (see below)
+:fieldarray/handle-change ;; (handle-change evt idx)
+:fieldarray/handle-blur ;; (handle-blur evt idx)}
+```
 
 ### Does Fork do anything else for me?
 
@@ -623,7 +638,7 @@ Here is a demonstration on how to use the above handlers that have not been ment
   :path ["name"]})
 
 (set-handle-blur
- {:value true
+ {:value true ;; or false
   :path ["name"]})
 ```
 
