@@ -49,8 +49,8 @@
                       handle-change
                       handle-blur
                       current-dragged-idx
-                      next-droppable-target
-                      prev-droppable-target
+                      next-droppable-target?
+                      prev-droppable-target?
                       drag-and-drop-handlers]}]
   [:div
    (doall
@@ -68,10 +68,10 @@
                         (= idx (current-dragged-idx :field-array-1))
                         (assoc :opacity 0.5)
 
-                        (next-droppable-target :field-array-1 idx)
+                        (next-droppable-target? :field-array-1 idx)
                         (assoc :border-bottom "10px solid black")
 
-                        (prev-droppable-target :field-array-1 idx)
+                        (prev-droppable-target? :field-array-1 idx)
                         (assoc :border-top "10px solid black"))})
              [:div "DRAG ME!"]
              [:br]
