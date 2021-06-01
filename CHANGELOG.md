@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.4.1]
+### Added
+- set-handle-change takes a vector of maps vs one map
+
 ## [2.4.0]
 ### Added
 - Add support for fieldarray drag and drop (only top level fieldarrays)

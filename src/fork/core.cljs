@@ -153,15 +153,33 @@
         path (conj vec-field-array-key idx input-key)]
     (swap! state update :touched conj path)))
 
-(defn set-handle-change
-  [{:keys [value path]} state]
+(defn- set-handle-change-one
+  [deref-state {:keys [value path]}]
   (let [path (vectorize-path path)
-        current-value (get-in @state (cons :values path))
+        current-value (get-in deref-state (cons :values path))
         new-value (if (fn? value) (value current-value) value)
         resolved-new-value (if (seq? new-value)
                              (doall new-value)
                              new-value)]
-    (swap! state assoc-in (cons :values path) resolved-new-value)))
+    (assoc-in deref-state (cons :values path) resolved-new-value)))
+
+(defn set-handle-change
+  [params state]
+  (cond
+    (map? params)
+    (swap! state #(set-handle-change-one % params))
+
+    (sequential? params)
+    (swap! state
+           (fn [old-state]
+             (->> (remove nil? params)
+                  (reduce
+                   (fn [acc item]
+                     (set-handle-change-one acc item))
+                   old-state))))
+
+    :else (js/console.error "set-handle-change was called with the wrong
+    params. Provide either a map or a sequential collection")))
 
 (defn set-handle-blur
   [{:keys [value path]} state]
