@@ -17,14 +17,15 @@
       (get (:touched @state) k)))
 
 (defn initialize-state
-  [props]
-  (let [values (or (merge (:initial-values props)
-                          (:initial-touched props))
+  [{:keys [state keywordize-keys initial-values initial-touched]}]
+  (let [values (or (merge initial-values initial-touched)
                    {})
-        initialized-state {:keywordize-keys (:keywordize-keys props)
+        initialized-state {:keywordize-keys keywordize-keys
+                           :initial-values initial-values
+                           :initial-touched initial-touched
                            :values values
-                           :touched (into #{} (keys (:initial-touched props)))}]
-    (if-let [user-provided-state (:state props)]
+                           :touched (into #{} (keys initial-touched))}]
+    (if-let [user-provided-state state]
       (do (swap! user-provided-state merge initialized-state)
           user-provided-state)
       (r/atom initialized-state))))
@@ -223,8 +224,7 @@
 
 (defn handle-submit
   [evt {:keys [state server on-submit prevent-default?
-               initial-values touched-values path
-               validation already-submitting? reset]}]
+               path validation already-submitting? reset]}]
   (when prevent-default? (.preventDefault evt))
   (swap! state update :attempted-submissions inc)
   (when (and (not already-submitting?)
@@ -236,14 +236,14 @@
      {:state state
       :path path
       :values (:values @state)
-      :dirty (dirty (:values @state) (merge initial-values
-                                            touched-values))
+      :dirty (dirty (:values @state) (merge (:initial-values @state)
+                                            (:touched-values @state)))
       :reset reset})))
 
 (defn send-server-request
   [http-fn
-   {:keys [state validation evt name value path server-dispatch-logic
-           debounce throttle initial-values touched-values]}]
+   {:keys [state validation evt name value path
+           server-dispatch-logic debounce throttle]}]
   (let [input-key name
         input-value value
         values (merge
@@ -254,8 +254,8 @@
                   (conj (:touched @state) input-key)
                   (:touched @state))
         props {:path path
-               :dirty (dirty values (merge initial-values
-                                           touched-values))
+               :dirty (dirty values (merge (:initial-values @state)
+                                           (:touched-values @state)))
                :errors (when validation (handle-validation {:values values}
                                                            validation))
                :values values

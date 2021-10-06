@@ -112,8 +112,8 @@
             :path path
             :form-id form-id
             :values (:values @state)
-            :dirty (core/dirty (:values @state) (merge (:initial-values props)
-                                                       (:touched-values props)))
+            :dirty (core/dirty (:values @state) (merge (:initial-values @state)
+                                                       (:touched-values @state)))
             :errors validation
             :server-errors server-validation
             :on-submit-server-message on-submit-server-message

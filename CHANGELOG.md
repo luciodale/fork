@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.4.2]
+### Fix
+- store initial-values and initial-touched in state so they can be modified after first mount
+
 ## [2.4.1]
 ### Added
 - set-handle-change takes a vector of maps vs one map
