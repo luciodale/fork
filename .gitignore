@@ -2,3 +2,7 @@ target/
 pom.xml
 pom.xml.asc
 .nrepl-port
+/.clj-kondo
+/.lsp
+/.cpcache
+.DS_Store
