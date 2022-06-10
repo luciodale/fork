@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.4.3]
+### Changed
+- swap order when merging user provided fork state with the internal one. This allows the `:values` and `:touched` keys to remain unchanged when the code hot reloads
+
 ## [2.4.2]
 ### Fix
 - store initial-values and initial-touched in state so they can be modified after first mount

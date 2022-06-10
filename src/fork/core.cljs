@@ -26,7 +26,7 @@
                            :values values
                            :touched (into #{} (keys initial-touched))}]
     (if-let [user-provided-state state]
-      (do (swap! user-provided-state merge initialized-state)
+      (do (swap! user-provided-state (fn [db] (merge initialized-state db)))
           user-provided-state)
       (r/atom initialized-state))))
 
