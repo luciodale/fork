@@ -170,7 +170,7 @@ Let's examine what has been added step by step:
 * Destructure `handle-submit` and `submitting?` to be used in your UI
 * Wrap your inputs in a form tag and add a submit button
 
-If some parts look a bit obscure, the will be explained thoroughly in the following paragraphs.
+If some parts look a bit obscure, they will be explained thoroughly in the following paragraphs.
 
 #### Params
 
