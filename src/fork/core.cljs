@@ -220,7 +220,8 @@
 
 (defn dirty
   [values initial-values]
-  (first (data/diff values (or initial-values {}))))
+  (let [[only-in-values only-in-initial-values _both] (data/diff values (or initial-values {}))]
+    (merge only-in-initial-values only-in-values)))
 
 (defn handle-submit
   [evt {:keys [state server on-submit prevent-default?
