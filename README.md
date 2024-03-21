@@ -212,7 +212,7 @@ You probably want to know more than the same old *Hello World* demonstration. He
 
 (rf/reg-event-fx
  :success
- (fn [{db :db} [_ result path]]
+ (fn [{db :db} [_ path result]]
    {:db (-> db
             (assoc :result result)
             (fork/set-submitting path false)
@@ -220,7 +220,7 @@ You probably want to know more than the same old *Hello World* demonstration. He
 
 (rf/reg-event-fx
  :failure
- (fn [{db :db} [_ result path]]
+ (fn [{db :db} [_ path result]]
    {:db (-> db
             (fork/set-submitting path false)
             (fork/set-server-message path "Registration failed!"))}))
