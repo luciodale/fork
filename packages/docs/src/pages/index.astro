@@ -1,5 +1,4 @@
 ---
-import HeroSection from "@luciodale/docs-ui-kit/components/HeroSection.astro";
 import PageLayout from "@luciodale/docs-ui-kit/components/PageLayout.astro";
 import { siteConfig } from "../config";
 import Base from "../layouts/Base.astro";
@@ -10,19 +9,39 @@ export const prerender = true;
 
 <Base title={siteConfig.title} description={siteConfig.description}>
 	<PageLayout config={siteConfig} currentPath="/">
-		<section class="flex flex-col items-center justify-center px-6 py-24 md:py-32 text-center max-w-3xl mx-auto">
+		<section
+			class="flex flex-col items-center justify-center px-6 py-24 md:py-32 text-center max-w-3xl mx-auto"
+		>
 			<div class="flex items-center gap-4 mb-4">
-				<img src={href(siteConfig.logoSrc)} alt={siteConfig.logoAlt ?? siteConfig.title} class="w-12 h-12 md:w-14 md:h-14" />
-				<h1 class="text-4xl md:text-5xl font-bold tracking-tight text-white leading-[1.1]">
+				{
+					siteConfig.logoSrc && (
+						<img
+							src={href(siteConfig.logoSrc)}
+							alt={siteConfig.logoAlt ?? siteConfig.title}
+							class="w-12 h-12 md:w-14 md:h-14"
+						/>
+					)
+				}
+				<h1
+					class="text-4xl md:text-5xl font-bold tracking-tight text-white leading-[1.1]"
+				>
 					{siteConfig.title}
 				</h1>
 			</div>
 			<p class="text-lg text-white/50 leading-relaxed max-w-xl mb-10">
-				A form library for Reagent & Re-frame. Handles the form plumbing you don't want to build:
-				{" "}<span class="text-accent font-medium">state orchestration</span>,
-				{" "}<span class="text-blue-400 font-medium">pluggable validation</span>,
-				{" "}<span class="text-green-400 font-medium">field arrays</span>, and
-				{" "}<span class="text-purple-400 font-medium">server request handling</span>.
+				A form library for Reagent & Re-frame. Handles the form plumbing
+				you don't want to build:
+				{" "}<span class="text-accent font-medium"
+					>state orchestration</span
+				>,
+				{" "}<span class="text-blue-400 font-medium"
+					>pluggable validation</span
+				>,
+				{" "}<span class="text-green-400 font-medium">field arrays</span
+				>, and
+				{" "}<span class="text-purple-400 font-medium"
+					>server request handling</span
+				>.
 				{" "}Your components, your validation, your style.
 			</p>
 			<button
@@ -31,7 +50,9 @@ export const prerender = true;
 				data-code={siteConfig.installCommand}
 			>
 				<span>{siteConfig.installCommand}</span>
-				<span class="ml-3 text-white/30 group-hover:text-white/50 transition-colors text-xs copy-label">
+				<span
+					class="ml-3 text-white/30 group-hover:text-white/50 transition-colors text-xs copy-label"
+				>
 					Copy
 				</span>
 			</button>
@@ -65,7 +86,9 @@ export const prerender = true;
 				const label = btn.querySelector(".copy-label");
 				if (label) {
 					label.textContent = "Copied!";
-					setTimeout(() => { label.textContent = "Copy"; }, 2000);
+					setTimeout(() => {
+						label.textContent = "Copy";
+					}, 2000);
 				}
 			});
 		});
