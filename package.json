@@ -7,7 +7,7 @@
 	"private": true,
 	"scripts": {
 		"dev": "bun run --filter fork-docs dev",
-		"build:docs": "bun run --filter fork-docs build && cp packages/docs/public/.assetsignore packages/docs/dist/.assetsignore",
+		"build": "bun run --filter fork-docs build && cp packages/docs/public/.assetsignore packages/docs/dist/.assetsignore",
 		"deploy:docs": "cd packages/docs && npx wrangler deploy",
 		"format": "biome format --write .",
 		"lint": "biome check .",
