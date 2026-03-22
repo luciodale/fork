@@ -1,0 +1,283 @@
+---
+import Callout from "@luciodale/docs-ui-kit/components/Callout.astro";
+import CodeBlock from "@luciodale/docs-ui-kit/components/CodeBlock.astro";
+import ContentSection from "@luciodale/docs-ui-kit/components/ContentSection.astro";
+import FeatureList from "@luciodale/docs-ui-kit/components/FeatureList.astro";
+import InlineCode from "@luciodale/docs-ui-kit/components/InlineCode.astro";
+import PackageInfo from "@luciodale/docs-ui-kit/components/PackageInfo.astro";
+import DocsPage from "../../layouts/DocsPage.astro";
+import { href } from "../../lib/link";
+
+export const prerender = true;
+---
+
+<DocsPage
+	title="Getting Started"
+	description="Install and set up fork, a form library for Reagent and Re-frame."
+>
+	<ContentSection label="What is fork?">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			Forms look easy until you actually build them. The initial
+			<InlineCode>&lt;input&gt;</InlineCode> takes five minutes. Then you spend the
+			next week wiring up change handlers, tracking which fields the user has
+			touched, figuring out when to show validation errors, managing submission
+			state, handling server-side validation responses, and dealing with dynamic
+			field groups that can be added or removed on the fly. All of this ends up
+			scattered across atoms, subscriptions, and event handlers until the whole
+			thing becomes a maintenance problem.
+		</p>
+		<p class="text-white/60 leading-relaxed">
+			Fork takes that entire layer off your plate. You pass a config map and a
+			render function, and the library handles state initialization, change
+			tracking, blur tracking, dirty detection, validation orchestration,
+			submission lifecycle, and server request coordination. Your code stays
+			focused on what the form looks like and what happens when it submits.
+			The form plumbing just works.
+		</p>
+	</ContentSection>
+
+	<ContentSection label="Rationale">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			Most ClojureScript form solutions fall into two camps. The heavy ones
+			give you pre-built components tied to a specific CSS framework, and you
+			end up fighting them the moment your design doesn't fit. The thin ones
+			hand you a couple of atoms and leave every hard problem on your plate:
+			touched tracking, validation timing, submission guards, server-side
+			error integration. You still write all the same boilerplate.
+		</p>
+		<p class="text-white/60 mb-4 leading-relaxed">
+			Fork sits in the space between. It's an <strong
+				class="text-white/80">orchestrator</strong
+			>, not a framework. It manages the state lifecycle that is genuinely
+			painful to get right, and gets out of the way for everything else. Your
+			components. Your CSS. Your validation library. Fork doesn't render
+			anything or make decisions it can't reverse.
+		</p>
+		<p class="text-white/60 mb-4 leading-relaxed">
+			Here's what you get for free:
+		</p>
+		<FeatureList
+			features={[
+				{
+					highlight: "State orchestration",
+					description:
+						"values, touched fields, dirty tracking, disabled state, submission counters. All managed in a single ratom with composable, side-effect-free helpers",
+					color: "accent",
+				},
+				{
+					highlight: "Pluggable validation",
+					description:
+						"bring any validation library (Vlad, Malli, custom). Pass a function, get errors back. Fork blocks submission until they clear and only shows errors after the field is touched",
+					color: "blue",
+				},
+				{
+					highlight: "Field arrays",
+					description:
+						"dynamic field groups with insert, remove, and drag-and-drop reordering. Touched state tracks correctly across additions and deletions",
+					color: "green",
+				},
+				{
+					highlight: "Server request handling",
+					description:
+						"built-in debounce/throttle for server-side validation, waiting state tracking, and error injection. The form won't submit while a server request is pending",
+					color: "purple",
+				},
+				{
+					highlight: "Reagent & Re-frame",
+					description:
+						"identical API for both. Use fork.reagent for local state or fork.re-frame for global state with subscriptions and events. Switch between them by changing one require",
+					color: "yellow",
+				},
+			]}
+		/>
+		<p class="text-white/60 leading-relaxed">
+			And here's what you stay in control of: your components, your CSS, your
+			validation logic, your submission handlers. Fork doesn't render a single
+			DOM element. It keeps the form lifecycle organized and predictable. You
+			write the UI.
+		</p>
+	</ContentSection>
+
+	<ContentSection label="Installation">
+		<CodeBlock
+			code={`;; deps.edn
+fork {:mvn/version "2.4.3"}
+
+;; or via git
+fork {:git/url "https://github.com/luciodale/fork.git"
+      :sha "<commit-sha>"}`}
+			language="clojure"
+			filename="deps.edn"
+		/>
+		<CodeBlock
+			code={`;; project.clj (Leiningen)
+[fork "2.4.3"]`}
+			language="clojure"
+			filename="project.clj"
+		/>
+		<PackageInfo
+			packageName="fork"
+			githubRepo="luciodale/fork"
+		/>
+	</ContentSection>
+
+	<ContentSection label="Quick Start">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			The simplest possible form. One input, one render function, zero
+			configuration beyond initial values. Everything lives in a single
+			namespace:
+		</p>
+		<CodeBlock
+			code={`(ns app.core
+  (:require [fork.reagent :as fork]))
+
+(defn my-form
+  [{:keys [values handle-change handle-blur]}]
+  [:div
+   [:p "Read back: " (values "input")]
+   [:input
+    {:name "input"
+     :value (values "input")
+     :on-change handle-change
+     :on-blur handle-blur}]])
+
+(defn app []
+  [fork/form {:initial-values {"input" "hello"}}
+   my-form])`}
+			language="clojure"
+			filename="app/core.cljs"
+		/>
+		<p class="text-white/60 mt-4 leading-relaxed">
+			That's the whole thing. Fork takes two arguments: a config map and a
+			component function. The component receives a map of handlers and state
+			accessors as its first argument. Notice how <InlineCode>values</InlineCode>
+			is a function: call it with a field name and get the current value back.
+			<InlineCode>handle-change</InlineCode> and <InlineCode>handle-blur</InlineCode>
+			wire directly to your input's event attributes.
+		</p>
+		<Callout type="tip" title="Re-frame">
+			To use Fork with Re-frame instead of plain Reagent, change the require
+			from <InlineCode>fork.reagent</InlineCode> to
+			<InlineCode>fork.re-frame</InlineCode>. The API is identical. Re-frame
+			mode stores server-related state (submitting, server errors, server
+			messages) in the app-db at the path you specify.
+		</Callout>
+	</ContentSection>
+
+	<ContentSection label="Submission">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			A form that actually does something when submitted. This example uses
+			Re-frame to dispatch the submission, track the submitting state, and
+			reset it after a simulated server response:
+		</p>
+		<CodeBlock
+			code={`(ns app.core
+  (:require
+   [fork.re-frame :as fork]
+   [re-frame.core :as rf]))
+
+(rf/reg-event-fx
+ :submit-handler
+ (fn [{db :db} [_ {:keys [values dirty path]}]]
+   {:db (fork/set-submitting db path true)
+    :dispatch-later [{:ms 1000
+                      :dispatch [:resolved-form path values]}]}))
+
+(rf/reg-event-fx
+ :resolved-form
+ (fn [{db :db} [_ path values]]
+   (js/alert values)
+   {:db (fork/set-submitting db path false)}))
+
+(defn app []
+  [fork/form {:path [:form]
+              :form-id "my-form"
+              :prevent-default? true
+              :clean-on-unmount? true
+              :on-submit #(rf/dispatch [:submit-handler %])}
+   (fn [{:keys [values form-id handle-change
+                handle-blur submitting? handle-submit]}]
+     [:form
+      {:id form-id
+       :on-submit handle-submit}
+      [:input
+       {:name "input"
+        :value (values "input")
+        :on-change handle-change
+        :on-blur handle-blur}]
+      [:button
+       {:type "submit"
+        :disabled submitting?}
+       "Submit Form"]])])`}
+			language="clojure"
+			filename="app/core.cljs"
+		/>
+		<p class="text-white/60 mt-4 leading-relaxed">
+			The <InlineCode>:on-submit</InlineCode> callback receives a map with
+			<InlineCode>:values</InlineCode>, <InlineCode>:dirty</InlineCode>,
+			<InlineCode>:path</InlineCode>, <InlineCode>:state</InlineCode>, and
+			<InlineCode>:reset</InlineCode>. The <InlineCode>dirty</InlineCode> key
+			tells you which values changed from their initial state. Use
+			<InlineCode>set-submitting</InlineCode> to toggle the submission guard:
+			Fork prevents double-submits while <InlineCode>submitting?</InlineCode>
+			is true.
+		</p>
+	</ContentSection>
+
+	<ContentSection label="Composable State Helpers">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			Fork's global helpers (<InlineCode>set-submitting</InlineCode>,
+			<InlineCode>set-waiting</InlineCode>,
+			<InlineCode>set-error</InlineCode>,
+			<InlineCode>set-server-message</InlineCode>) are deliberately
+			side-effect-free. They take state and return updated state. This makes
+			them composable inside a single <InlineCode>swap!</InlineCode> or
+			Re-frame event, preventing unnecessary re-renders:
+		</p>
+		<CodeBlock
+			code={`;; Composable: one state update, not two
+(swap! state #(-> %
+                  (fork/set-submitting path true)
+                  (update :some-key inc)))
+
+;; In a Re-frame event
+(rf/reg-event-db
+ :handle-response
+ (fn [db [_ path result]]
+   (-> db
+       (fork/set-submitting path false)
+       (fork/set-server-message path "Saved!"))))`}
+			language="clojure"
+			filename="composable-helpers.cljs"
+		/>
+	</ContentSection>
+
+	<ContentSection label="Next Steps">
+		<ul class="space-y-2 text-white/60">
+			<li>
+				<a
+					href={href("/docs/configuration")}
+					class="text-accent hover:underline">Configuration</a
+				> &mdash; all form options in detail
+			</li>
+			<li>
+				<a
+					href={href("/docs/validation")}
+					class="text-accent hover:underline">Validation</a
+				> &mdash; pluggable validation with any library
+			</li>
+			<li>
+				<a
+					href={href("/docs/field-arrays")}
+					class="text-accent hover:underline">Field Arrays</a
+				> &mdash; dynamic field groups with drag-and-drop
+			</li>
+			<li>
+				<a
+					href={href("/docs/api")}
+					class="text-accent hover:underline">API Reference</a
+				> &mdash; every handler and option
+			</li>
+		</ul>
+	</ContentSection>
+</DocsPage>

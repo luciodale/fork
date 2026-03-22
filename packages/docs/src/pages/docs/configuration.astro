@@ -1,0 +1,240 @@
+---
+import CodeBlock from "@luciodale/docs-ui-kit/components/CodeBlock.astro";
+import ContentSection from "@luciodale/docs-ui-kit/components/ContentSection.astro";
+import InlineCode from "@luciodale/docs-ui-kit/components/InlineCode.astro";
+import Callout from "@luciodale/docs-ui-kit/components/Callout.astro";
+import PropsTable from "@luciodale/docs-ui-kit/components/PropsTable.astro";
+import DocsPage from "../../layouts/DocsPage.astro";
+import { href } from "../../lib/link";
+
+export const prerender = true;
+---
+
+<DocsPage
+	title="Configuration"
+	description="All configuration options for fork forms."
+>
+	<ContentSection label="Form Config Map">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			The first argument to <InlineCode>fork/form</InlineCode> is a config
+			map. Every key is optional except <InlineCode>:on-submit</InlineCode>
+			if you want submission handling. Here's the full set:
+		</p>
+		<PropsTable
+			rows={[
+				{
+					name: ":initial-values",
+					type: "map",
+					description:
+						'Pre-populates form fields. Keys must match input :name attributes. e.g. {"name" "John", "email" ""}',
+				},
+				{
+					name: ":initial-touched",
+					type: "map",
+					description:
+						"Pre-populates fields AND marks them as touched. Useful for edit forms where you want validation errors visible immediately.",
+				},
+				{
+					name: ":path",
+					type: "keyword | vector",
+					description:
+						"Where to store global state in re-frame app-db. Can be a keyword (:form) or a vector ([:forms :login]). Only relevant for fork.re-frame.",
+				},
+				{
+					name: ":form-id",
+					type: "string",
+					description:
+						"HTML id for the form element. If omitted, a random id is generated and available via the :form-id key in props.",
+				},
+				{
+					name: ":keywordize-keys",
+					type: "boolean",
+					description:
+						"When true, field names are treated as keywords instead of strings. Use normalize-name to convert keyword input names for the DOM.",
+				},
+				{
+					name: ":prevent-default?",
+					type: "boolean",
+					description:
+						"Prevents the browser's default form submission behavior. Almost always true for SPA forms.",
+				},
+				{
+					name: ":clean-on-unmount?",
+					type: "boolean",
+					description:
+						"Resets the re-frame app-db state at :path when the component unmounts. Only applies to fork.re-frame.",
+				},
+				{
+					name: ":validation",
+					type: "function",
+					description:
+						"A function that receives the values map and returns errors. Any validation library works. Fork blocks submission while errors exist.",
+				},
+				{
+					name: ":on-submit",
+					type: "function",
+					description:
+						"Called on valid submission. Receives a map with :state, :path, :values, :dirty, and :reset.",
+				},
+				{
+					name: ":component-did-mount",
+					type: "function",
+					description:
+						"Lifecycle hook called after mount. Receives a map of handlers: set-touched, set-untouched, set-values, disable, enable, disabled?, handle-change, handle-blur, send-server-request.",
+				},
+				{
+					name: ":state",
+					type: "ratom",
+					description:
+						"Provide your own ratom for form state. Useful when you need to access form state from outside the form component.",
+				},
+				{
+					name: ":props",
+					type: "map",
+					description:
+						"Pass arbitrary data through to your form component. Accessible via the :props key in the component's argument map.",
+				},
+			]}
+		/>
+	</ContentSection>
+
+	<ContentSection label="Reagent vs Re-frame">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			The APIs are identical. The difference is where server-related state
+			lives:
+		</p>
+		<CodeBlock
+			code={`;; Reagent: everything in a local ratom
+(ns app.core
+  (:require [fork.reagent :as fork]))
+
+;; State helpers operate on the ratom directly
+(swap! state fork/set-submitting path true)
+
+;; Re-frame: server state lives in app-db
+(ns app.core
+  (:require [fork.re-frame :as fork]))
+
+;; State helpers operate on the db inside events
+(rf/reg-event-db
+ :my-event
+ (fn [db [_ path]]
+   (fork/set-submitting db path true)))`}
+			language="clojure"
+			filename="reagent-vs-reframe.cljs"
+		/>
+		<Callout type="tip" title="Switching between them">
+			You can switch from Reagent to Re-frame (or vice versa) by changing
+			the <InlineCode>:require</InlineCode> and adding/removing the
+			<InlineCode>:path</InlineCode> config key. The component render
+			function stays the same.
+		</Callout>
+	</ContentSection>
+
+	<ContentSection label="Keyword Keys">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			By default, Fork uses string keys for field names. If you prefer
+			keywords (including namespaced keywords), enable
+			<InlineCode>:keywordize-keys</InlineCode> and use
+			<InlineCode>normalize-name</InlineCode> for DOM attributes:
+		</p>
+		<CodeBlock
+			code={`[fork/form {:keywordize-keys true
+            :initial-values {:user/name "John"
+                             :user/email ""}}
+ (fn [{:keys [values handle-change handle-blur normalize-name]}]
+   [:div
+    [:input
+     {:name (normalize-name :user/name)
+      :value (values :user/name)
+      :on-change handle-change
+      :on-blur handle-blur}]
+    [:input
+     {:name (normalize-name :user/email)
+      :value (values :user/email)
+      :on-change handle-change
+      :on-blur handle-blur}]])]`}
+			language="clojure"
+			filename="keyword-keys.cljs"
+		/>
+		<p class="text-white/60 mt-4 leading-relaxed">
+			<InlineCode>normalize-name</InlineCode> converts <InlineCode>:user/name</InlineCode>
+			to <InlineCode>"user/name"</InlineCode> for the DOM <InlineCode>name</InlineCode>
+			attribute. When <InlineCode>:keywordize-keys</InlineCode> is not set, it
+			returns the value unchanged.
+		</p>
+	</ContentSection>
+
+	<ContentSection label="Custom State">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			Pass your own ratom via <InlineCode>:state</InlineCode> to access
+			form state from outside the form component. Fork merges its initial
+			state into your atom, preserving any existing keys:
+		</p>
+		<CodeBlock
+			code={`(def my-state (r/atom {:custom-key "preserved"}))
+
+[fork/form {:state my-state
+            :initial-values {"name" ""}}
+ (fn [{:keys [values handle-change]}]
+   ;; my-state now contains both :custom-key and Fork's :values, :touched, etc.
+   [:input
+    {:name "name"
+     :value (values "name")
+     :on-change handle-change}])]
+
+;; Outside the form, you can read:
+(:values @my-state) ;; => {"name" "current-value"}`}
+			language="clojure"
+			filename="custom-state.cljs"
+		/>
+	</ContentSection>
+
+	<ContentSection label="Passing Props">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			Use <InlineCode>:props</InlineCode> to pass data through to your form
+			component without polluting the config:
+		</p>
+		<CodeBlock
+			code={`(defn my-form
+  [{:keys [props values handle-change handle-blur]}]
+  [:div
+   [:h2 (:title props)]
+   [:input
+    {:name "input"
+     :value (values "input")
+     :on-change handle-change
+     :on-blur handle-blur}]])
+
+(defn app []
+  [fork/form {:props {:title "Registration Form"}
+              :initial-values {"input" ""}}
+   my-form])`}
+			language="clojure"
+			filename="passing-props.cljs"
+		/>
+	</ContentSection>
+
+	<ContentSection label="Next Steps">
+		<ul class="space-y-2 text-white/60">
+			<li>
+				<a
+					href={href("/docs/validation")}
+					class="text-accent hover:underline">Validation</a
+				> &mdash; pluggable validation with any library
+			</li>
+			<li>
+				<a
+					href={href("/docs/field-arrays")}
+					class="text-accent hover:underline">Field Arrays</a
+				> &mdash; dynamic field groups
+			</li>
+			<li>
+				<a
+					href={href("/docs/api")}
+					class="text-accent hover:underline">API Reference</a
+				> &mdash; every handler and option
+			</li>
+		</ul>
+	</ContentSection>
+</DocsPage>

@@ -1,0 +1,356 @@
+---
+import CodeBlock from "@luciodale/docs-ui-kit/components/CodeBlock.astro";
+import ContentSection from "@luciodale/docs-ui-kit/components/ContentSection.astro";
+import InlineCode from "@luciodale/docs-ui-kit/components/InlineCode.astro";
+import Callout from "@luciodale/docs-ui-kit/components/Callout.astro";
+import PropsTable from "@luciodale/docs-ui-kit/components/PropsTable.astro";
+import DocsPage from "../../layouts/DocsPage.astro";
+import { href } from "../../lib/link";
+
+export const prerender = true;
+---
+
+<DocsPage
+	title="API Reference"
+	description="Complete reference for all fork handlers, state accessors, and global helpers."
+>
+	<ContentSection label="Form Component Props">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			Your form render function receives a single map with these keys:
+		</p>
+		<PropsTable
+			rows={[
+				{
+					name: "values",
+					type: "(name) → value",
+					description:
+						"Function that returns the current value for a given field name.",
+				},
+				{
+					name: "errors",
+					type: "map | nil",
+					description:
+						"Client-side validation errors. Shape depends on your validation function. nil when no validation is configured or no errors exist.",
+				},
+				{
+					name: "server-errors",
+					type: "map | nil",
+					description:
+						"Server-side validation errors set via set-error. nil when no server errors exist.",
+				},
+				{
+					name: "touched",
+					type: "(name) → boolean",
+					description:
+						"Returns truthy when the field has been blurred or when attempted-submissions > 0.",
+				},
+				{
+					name: "dirty",
+					type: "map | nil",
+					description:
+						"Map of values that differ from initial-values. nil when nothing has changed.",
+				},
+				{
+					name: "form-id",
+					type: "string",
+					description:
+						"The form ID (user-provided or auto-generated). Use as the :id on your <form> element.",
+				},
+				{
+					name: "submitting?",
+					type: "boolean",
+					description:
+						"True when set-submitting has been called with true. Use to disable the submit button.",
+				},
+				{
+					name: "attempted-submissions",
+					type: "number",
+					description:
+						"Number of times handle-submit has been called, including blocked attempts.",
+				},
+				{
+					name: "successful-submissions",
+					type: "number",
+					description:
+						"Number of times the :on-submit callback actually fired (passed all validation).",
+				},
+				{
+					name: "on-submit-server-message",
+					type: "string | nil",
+					description:
+						"Message set via set-server-message. Use for post-submission feedback.",
+				},
+				{
+					name: "state",
+					type: "ratom",
+					description:
+						"The raw ratom backing the form. For direct access when you need it.",
+				},
+				{
+					name: "path",
+					type: "vector",
+					description:
+						"The resolved path in re-frame app-db. Always a vector.",
+				},
+				{
+					name: "db",
+					type: "map",
+					description:
+						"Dereferenced re-frame state at :path. Only available in fork.re-frame.",
+				},
+				{
+					name: "props",
+					type: "any",
+					description:
+						"Whatever you passed via the :props config key.",
+				},
+			]}
+		/>
+	</ContentSection>
+
+	<ContentSection label="Event Handlers">
+		<PropsTable
+			rows={[
+				{
+					name: "handle-change",
+					type: "(evt) → nil",
+					description:
+						"Wire to :on-change. Extracts the field name and value from the DOM event and updates the form state.",
+				},
+				{
+					name: "handle-blur",
+					type: "(evt) → nil",
+					description:
+						"Wire to :on-blur. Marks the field as touched so validation errors become visible.",
+				},
+				{
+					name: "handle-submit",
+					type: "(evt) → nil",
+					description:
+						"Wire to :on-submit on the <form> element. Increments attempted-submissions, checks validation and server state, then calls your :on-submit if everything is clear.",
+				},
+			]}
+		/>
+	</ContentSection>
+
+	<ContentSection label="Programmatic State Updates">
+		<PropsTable
+			rows={[
+				{
+					name: "set-values",
+					type: "(map) → nil",
+					description:
+						'Merges the provided map into form values and marks those fields as touched. e.g. (set-values {"name" "John"})',
+				},
+				{
+					name: "set-touched",
+					type: "(& names) → nil",
+					description:
+						'Marks fields as touched. e.g. (set-touched "name" "email")',
+				},
+				{
+					name: "set-untouched",
+					type: "(& names) → nil",
+					description:
+						'Removes fields from the touched set. e.g. (set-untouched "name")',
+				},
+				{
+					name: "set-handle-change",
+					type: "(map | vec) → nil",
+					description:
+						'Programmatic value change. Accepts {:value "x" :path ["field"]} or a vector of such maps. Value can be a function receiving the current value.',
+				},
+				{
+					name: "set-handle-blur",
+					type: "(map) → nil",
+					description:
+						"Programmatic blur. Accepts {:value true/false :path [\"field\"]}. When true, marks as touched; when false, unmarks.",
+				},
+				{
+					name: "disable",
+					type: "(& names) → nil",
+					description:
+						'Adds fields to the disabled set. e.g. (disable "name" "email")',
+				},
+				{
+					name: "enable",
+					type: "(& names) → nil",
+					description:
+						'Removes fields from the disabled set. e.g. (enable "name")',
+				},
+				{
+					name: "disabled?",
+					type: "(name) → boolean",
+					description:
+						"Returns true if the field is in the disabled set.",
+				},
+				{
+					name: "normalize-name",
+					type: "(keyword) → string",
+					description:
+						"Converts a keyword to a string suitable for DOM name attributes. Only active when :keywordize-keys is true.",
+				},
+				{
+					name: "reset",
+					type: "(& [map]) → nil",
+					description:
+						'Resets the entire form state. Optionally accepts a map to use as the new state. e.g. (reset) or (reset {:values {"name" "John"} :touched #{"name"}})',
+				},
+				{
+					name: "send-server-request",
+					type: "(config, callback) → nil",
+					description:
+						"Triggers a server-side validation request. See Server Requests guide for full config options.",
+				},
+			]}
+		/>
+	</ContentSection>
+
+	<ContentSection label="Global Helpers">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			These functions are side-effect-free. They take state (a db map or
+			ratom contents) and return the updated state. Use them inside
+			<InlineCode>swap!</InlineCode> (Reagent) or
+			<InlineCode>reg-event-db</InlineCode> (Re-frame):
+		</p>
+		<PropsTable
+			rows={[
+				{
+					name: "set-submitting",
+					type: "(db, path, bool) → db",
+					description:
+						"Sets the submitting flag at the given path. Use true before an async operation, false after.",
+				},
+				{
+					name: "set-waiting",
+					type: "(db, path, input-name, bool) → db",
+					description:
+						"Sets the waiting flag for a specific field. While any field is waiting, form submission is blocked.",
+				},
+				{
+					name: "set-error",
+					type: "(db, path, input-name, message) → db",
+					description:
+						"Injects a server-side error for a specific field. Accessible via :server-errors in the form component.",
+				},
+				{
+					name: "set-server-message",
+					type: "(db, path, message) → db",
+					description:
+						"Sets a global server message (success or failure). Accessible via :on-submit-server-message.",
+				},
+				{
+					name: "retrieve-event-value",
+					type: "(evt) → value",
+					description:
+						"Extracts the value from a DOM event. Handles checkboxes (returns checked boolean) and standard inputs (returns value string).",
+				},
+			]}
+		/>
+		<CodeBlock
+			code={`;; Reagent: composable inside swap!
+(swap! state #(-> %
+                  (fork/set-submitting path false)
+                  (fork/set-server-message path "Done!")))
+
+;; Re-frame: composable inside event handlers
+(rf/reg-event-db
+ :handle-response
+ (fn [db [_ path]]
+   (-> db
+       (fork/set-submitting path false)
+       (fork/set-server-message path "Done!"))))`}
+			language="clojure"
+			filename="global-helpers.cljs"
+		/>
+	</ContentSection>
+
+	<ContentSection label="Field Array API">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			The field array component receives a namespaced map as its second
+			argument:
+		</p>
+		<PropsTable
+			rows={[
+				{
+					name: ":fieldarray/fields",
+					type: "vector of maps",
+					description:
+						"The current array data.",
+				},
+				{
+					name: ":fieldarray/insert",
+					type: "(map) → nil",
+					description:
+						'Appends a new entry. e.g. (insert {"name" ""})',
+				},
+				{
+					name: ":fieldarray/remove",
+					type: "(idx) → nil",
+					description:
+						"Removes the entry at index. Touched state shifts correctly.",
+				},
+				{
+					name: ":fieldarray/handle-change",
+					type: "(evt, idx) → nil",
+					description:
+						"Like handle-change but scoped to a specific array index.",
+				},
+				{
+					name: ":fieldarray/handle-blur",
+					type: "(evt, idx) → nil",
+					description:
+						"Like handle-blur but scoped to a specific array index.",
+				},
+				{
+					name: ":fieldarray/touched",
+					type: "(idx, input-key) → boolean",
+					description:
+						"Returns truthy if the field at the given index has been touched.",
+				},
+				{
+					name: ":fieldarray/name",
+					type: "string | keyword",
+					description:
+						"The name of this field array.",
+				},
+				{
+					name: ":fieldarray/options",
+					type: "any",
+					description:
+						"Custom props passed via the :options key on the field-array config.",
+				},
+				{
+					name: ":fieldarray/drag-and-drop-handlers",
+					type: "(key, idx) → map",
+					description:
+						"Returns a map of HTML5 drag event handlers for the given row. Merge into the row's wrapper element.",
+				},
+				{
+					name: ":fieldarray/current-target-idx",
+					type: "(key) → idx | nil",
+					description:
+						"Returns the index of the current drop target during a drag operation.",
+				},
+				{
+					name: ":fieldarray/current-dragged-idx",
+					type: "(key) → idx | nil",
+					description:
+						"Returns the index of the currently dragged item.",
+				},
+				{
+					name: ":fieldarray/next-droppable-target?",
+					type: "(key, idx) → boolean",
+					description:
+						"True if the hovered item is below the dragged item. Use for drop indicator styling.",
+				},
+				{
+					name: ":fieldarray/prev-droppable-target?",
+					type: "(key, idx) → boolean",
+					description:
+						"True if the hovered item is above the dragged item. Use for drop indicator styling.",
+				},
+			]}
+		/>
+	</ContentSection>
+</DocsPage>

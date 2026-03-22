@@ -1,0 +1,210 @@
+---
+import CodeBlock from "@luciodale/docs-ui-kit/components/CodeBlock.astro";
+import ContentSection from "@luciodale/docs-ui-kit/components/ContentSection.astro";
+import InlineCode from "@luciodale/docs-ui-kit/components/InlineCode.astro";
+import Callout from "@luciodale/docs-ui-kit/components/Callout.astro";
+import DocsPage from "../../layouts/DocsPage.astro";
+import { href } from "../../lib/link";
+
+export const prerender = true;
+---
+
+<DocsPage
+	title="Field Arrays"
+	description="Dynamic field groups with insert, remove, and drag-and-drop reordering."
+>
+	<ContentSection label="The Problem">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			Some forms have a variable number of entries. A user might have zero
+			siblings or five. A recipe might need three ingredients or thirty.
+			You can't hardcode the field count. You need dynamic groups that can
+			be added, removed, and reordered, with touched tracking that survives
+			additions and deletions without getting out of sync.
+		</p>
+		<p class="text-white/60 leading-relaxed">
+			Fork's field arrays handle this. Each array is a vector of maps inside
+			the form values. Fork provides insert, remove, and drag-and-drop
+			handlers that keep the state consistent, including correctly shifting
+			touched indices when items are removed.
+		</p>
+	</ContentSection>
+
+	<ContentSection label="Basic Field Array">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			A field array requires two components: the parent form and a separate
+			Reagent component for the array rows. The separation is important:
+			if the array rows live inside an anonymous function, they lose focus
+			on every state change.
+		</p>
+		<CodeBlock
+			code={`(defn siblings-field-array
+  [_props
+   {:fieldarray/keys [fields insert remove
+                      handle-change handle-blur]}]
+  [:<>
+   (map-indexed
+    (fn [idx field]
+      ^{:key idx}
+      [:div
+       [:div
+        [:label "First Name"]
+        [:input
+         {:name "first-name"
+          :value (get field "first-name")
+          :on-change #(handle-change % idx)
+          :on-blur #(handle-blur % idx)}]]
+       [:div
+        [:label "Last Name"]
+        [:input
+         {:name "last-name"
+          :value (get field "last-name")
+          :on-change #(handle-change % idx)
+          :on-blur #(handle-blur % idx)}]]
+       [:button
+        {:type "button"
+         :on-click #(when (> (count fields) 1)
+                      (remove idx))}
+        "Remove"]])
+    fields)
+   [:button
+    {:type "button"
+     :on-click #(insert {"first-name" "" "last-name" ""})}
+    "Add Sibling"]])`}
+			language="clojure"
+			filename="siblings-field-array.cljs"
+		/>
+		<p class="text-white/60 mt-4 mb-4 leading-relaxed">
+			Then wire it into the parent form:
+		</p>
+		<CodeBlock
+			code={`(defn siblings-form []
+  [fork/form
+   {:on-submit #(js/alert (:values %))
+    :initial-values
+    {"siblings" [{"first-name" "" "last-name" ""}]}
+    :prevent-default? true}
+   (fn [{:keys [handle-submit] :as props}]
+     [:form
+      {:on-submit handle-submit}
+      [:h2 "Siblings"]
+      [fork/field-array {:props props
+                         :name "siblings"}
+       siblings-field-array]
+      [:button {:type "submit"} "Submit"]])])`}
+			language="clojure"
+			filename="siblings-form.cljs"
+		/>
+		<Callout type="warning" title="Separate component">
+			The field array render function (<InlineCode>siblings-field-array</InlineCode>)
+			must be a named component, not an inline anonymous function. An anonymous
+			function creates a new component on every render, causing inputs to lose
+			focus after each keystroke.
+		</Callout>
+	</ContentSection>
+
+	<ContentSection label="Field Array Handlers">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			The field array component receives two arguments: the form props
+			(from the parent) and a map of namespaced handlers:
+		</p>
+		<CodeBlock
+			code={`:fieldarray/name           ;; the name chosen for this array
+:fieldarray/options        ;; custom props passed via :options key
+:fieldarray/fields         ;; vector of maps (the array data)
+:fieldarray/touched        ;; (touched idx :my-input)
+:fieldarray/insert         ;; (insert {"field" "default-value"})
+:fieldarray/remove         ;; (remove idx)
+:fieldarray/handle-change  ;; (handle-change evt idx)
+:fieldarray/handle-blur    ;; (handle-blur evt idx)
+:fieldarray/set-handle-change  ;; programmatic value changes
+:fieldarray/set-handle-blur    ;; programmatic blur changes`}
+			language="clojure"
+			filename="fieldarray-handlers.cljs"
+		/>
+		<p class="text-white/60 mt-4 leading-relaxed">
+			Notice that <InlineCode>handle-change</InlineCode> and
+			<InlineCode>handle-blur</InlineCode> take an extra
+			<InlineCode>idx</InlineCode> argument compared to the top-level
+			form handlers. This tells Fork which row in the array the event
+			belongs to.
+		</p>
+	</ContentSection>
+
+	<ContentSection label="Drag and Drop">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			Field arrays support drag-and-drop reordering for top-level arrays.
+			Fork provides all the HTML5 drag event handlers. You merge them into
+			each row's wrapper element:
+		</p>
+		<CodeBlock
+			code={`(defn sortable-field-array
+  [_props
+   {:fieldarray/keys [fields insert remove
+                      handle-change handle-blur
+                      drag-and-drop-handlers
+                      next-droppable-target?
+                      prev-droppable-target?]}]
+  [:<>
+   (map-indexed
+    (fn [idx field]
+      ^{:key idx}
+      [:div
+       (merge
+        {:class (cond
+                  (next-droppable-target? "items" idx)
+                  "border-bottom-highlight"
+                  (prev-droppable-target? "items" idx)
+                  "border-top-highlight")}
+        (drag-and-drop-handlers "items" idx))
+       [:input
+        {:name "label"
+         :value (get field "label")
+         :on-change #(handle-change % idx)
+         :on-blur #(handle-blur % idx)}]
+       [:button
+        {:type "button"
+         :on-click #(remove idx)}
+        "Remove"]])
+    fields)
+   [:button
+    {:type "button"
+     :on-click #(insert {"label" ""})}
+    "Add Item"]])`}
+			language="clojure"
+			filename="sortable-field-array.cljs"
+		/>
+		<p class="text-white/60 mt-4 leading-relaxed">
+			<InlineCode>drag-and-drop-handlers</InlineCode> returns a map of
+			<InlineCode>:draggable</InlineCode>,
+			<InlineCode>:on-drag-start</InlineCode>,
+			<InlineCode>:on-drag-end</InlineCode>,
+			<InlineCode>:on-drag-over</InlineCode>,
+			<InlineCode>:on-drag-enter</InlineCode>, and
+			<InlineCode>:on-drop</InlineCode> attributes. The helper functions
+			<InlineCode>next-droppable-target?</InlineCode> and
+			<InlineCode>prev-droppable-target?</InlineCode> let you style the
+			drop indicator based on the drag direction.
+		</p>
+		<Callout type="info" title="Top-level only">
+			Drag-and-drop reordering works for top-level field arrays only. Nested
+			field arrays (arrays within arrays) do not support drag-and-drop.
+		</Callout>
+	</ContentSection>
+
+	<ContentSection label="Next Steps">
+		<ul class="space-y-2 text-white/60">
+			<li>
+				<a
+					href={href("/docs/server-requests")}
+					class="text-accent hover:underline">Server Requests</a
+				> &mdash; server-side validation with debounce
+			</li>
+			<li>
+				<a
+					href={href("/docs/api")}
+					class="text-accent hover:underline">API Reference</a
+				> &mdash; every handler and option
+			</li>
+		</ul>
+	</ContentSection>
+</DocsPage>

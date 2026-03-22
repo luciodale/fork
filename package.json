@@ -1,0 +1,22 @@
+{
+	"name": "fork-monorepo",
+	"version": "1.0.0",
+	"author": "Lucio D'Alessandro",
+	"description": "Form library for Reagent & Re-frame.",
+	"license": "MIT",
+	"private": true,
+	"scripts": {
+		"dev": "bun run --filter fork-docs dev",
+		"build:docs": "bun run --filter fork-docs build && cp packages/docs/public/.assetsignore packages/docs/dist/.assetsignore",
+		"deploy:docs": "cd packages/docs && npx wrangler deploy",
+		"format": "biome format --write .",
+		"lint": "biome check .",
+		"lint:fix": "biome check --write ."
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.3.14"
+	},
+	"workspaces": [
+		"packages/*"
+	]
+}

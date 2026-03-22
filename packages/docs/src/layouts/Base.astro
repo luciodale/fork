@@ -1,0 +1,39 @@
+---
+import SEO from "@luciodale/docs-ui-kit/components/SEO.astro";
+import { siteConfig } from "../config";
+import { href } from "../lib/link";
+import "../styles/global.css";
+
+type Props = {
+	title: string;
+	description?: string;
+	type?: "website" | "article";
+	noindex?: boolean;
+};
+
+const { title, description, type = "website", noindex = false } = Astro.props;
+const currentPath = Astro.url.pathname;
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+		<link rel="sitemap" href={href("/sitemap-index.xml")} />
+		<SEO
+			config={siteConfig}
+			title={title}
+			description={description}
+			currentPath={currentPath}
+			type={type}
+			noindex={noindex}
+		/>
+	</head>
+	<body>
+		<slot />
+	</body>
+</html>

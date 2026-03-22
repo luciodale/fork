@@ -1,0 +1,11 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "fork-docs",
+	"compatibility_date": "2025-03-18",
+	"compatibility_flags": ["nodejs_compat"],
+	"main": "dist/_worker.js/index.js",
+	"assets": {
+		"binding": "ASSETS",
+		"directory": "dist"
+	}
+}

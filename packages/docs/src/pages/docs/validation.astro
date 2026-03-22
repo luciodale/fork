@@ -1,0 +1,221 @@
+---
+import CodeBlock from "@luciodale/docs-ui-kit/components/CodeBlock.astro";
+import ContentSection from "@luciodale/docs-ui-kit/components/ContentSection.astro";
+import InlineCode from "@luciodale/docs-ui-kit/components/InlineCode.astro";
+import Callout from "@luciodale/docs-ui-kit/components/Callout.astro";
+import DocsPage from "../../layouts/DocsPage.astro";
+import { href } from "../../lib/link";
+
+export const prerender = true;
+---
+
+<DocsPage
+	title="Validation"
+	description="Pluggable client-side and server-side validation with fork."
+>
+	<ContentSection label="The Problem">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			Validation timing is harder than the validation itself. When do you show
+			errors? On every keystroke? On blur? Only after the first submit attempt?
+			What about server-side checks like "email already taken" that need an
+			HTTP round-trip? And how do you prevent submission while any of these
+			checks are still pending?
+		</p>
+		<p class="text-white/60 leading-relaxed">
+			Fork handles all of this. You provide a pure function that maps values
+			to errors. Fork decides when to evaluate it, when to display errors
+			(after touch), and when to block submission (while errors exist). For
+			server-side validation, there's a separate flow with built-in
+			debounce, waiting states, and error injection.
+		</p>
+	</ContentSection>
+
+	<ContentSection label="Client-Side Validation">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			Pass any side-effect-free function via <InlineCode>:validation</InlineCode>.
+			It receives the values map and returns errors in whatever shape your
+			validation library produces. Here's an example using
+			<a href="https://github.com/logaan/vlad" class="text-accent hover:underline">Vlad</a>:
+		</p>
+		<CodeBlock
+			code={`(ns app.core
+  (:require
+   [fork.re-frame :as fork]
+   [re-frame.core :as rf]
+   [vlad.core :as vlad]))
+
+(def validation
+  (vlad/join (vlad/attr ["name"]
+                        (vlad/chain
+                         (vlad/present)
+                         (vlad/length-in 3 15)))
+             (vlad/attr ["password"]
+                        (vlad/chain
+                         (vlad/present)
+                         (vlad/length-over 7)))))
+
+[fork/form {:path [:form]
+            :form-id "signup"
+            :validation #(vlad/field-errors validation %)
+            :prevent-default? true
+            :on-submit #(rf/dispatch [:submit-handler %])}
+ (fn [{:keys [values errors touched
+              handle-change handle-blur
+              submitting? handle-submit]}]
+   [:form
+    {:id "signup"
+     :on-submit handle-submit}
+    [:input
+     {:name "name"
+      :value (values "name")
+      :on-change handle-change
+      :on-blur handle-blur}]
+    (when (touched "name")
+      [:div.error (first (get errors (list "name")))])
+    [:input
+     {:name "password"
+      :type "password"
+      :value (values "password")
+      :on-change handle-change
+      :on-blur handle-blur}]
+    (when (touched "password")
+      [:div.error (first (get errors (list "password")))])
+    [:button
+     {:type "submit"
+      :disabled submitting?}
+     "Sign Up"]])]`}
+			language="clojure"
+			filename="validation.cljs"
+		/>
+		<p class="text-white/60 mt-4 leading-relaxed">
+			The key detail: <InlineCode>touched</InlineCode> is a function that
+			returns truthy when the user has blurred a field (or when
+			<InlineCode>:attempted-submissions</InlineCode> is greater than zero).
+			This means errors exist in the <InlineCode>errors</InlineCode> map
+			from the first keystroke, but you only render them after the field
+			loses focus. The user gets immediate feedback without being nagged
+			before they finish typing.
+		</p>
+		<Callout type="info" title="Submission blocking">
+			When a <InlineCode>:validation</InlineCode> function is provided, the
+			submit button's <InlineCode>handle-submit</InlineCode> does nothing
+			until all errors clear. The <InlineCode>:attempted-submissions</InlineCode>
+			counter still increments on each click, so you can use it to force
+			all errors visible after the first failed attempt.
+		</Callout>
+	</ContentSection>
+
+	<ContentSection label="Custom Validation">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			You don't need a library. Any function that takes values and returns
+			a map of errors works:
+		</p>
+		<CodeBlock
+			code={`(defn my-validation [values]
+  (cond-> {}
+    (empty? (get values "email"))
+    (assoc "email" "Email is required")
+
+    (< (count (get values "password" "")) 8)
+    (assoc "password" "Must be at least 8 characters")))
+
+[fork/form {:validation my-validation
+            :initial-values {"email" "" "password" ""}
+            ...}
+ (fn [{:keys [values errors touched handle-change handle-blur]}]
+   [:div
+    [:input
+     {:name "email"
+      :value (values "email")
+      :on-change handle-change
+      :on-blur handle-blur}]
+    (when (touched "email")
+      [:div.error (get errors "email")])])]`}
+			language="clojure"
+			filename="custom-validation.cljs"
+		/>
+	</ContentSection>
+
+	<ContentSection label="Password Confirmation">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			Cross-field validation (like password confirmation) works naturally
+			because the validation function receives all values at once:
+		</p>
+		<CodeBlock
+			code={`(def form-validation
+  (fn [password]
+    (vlad/join
+     (vlad/attr ["password"]
+                (vlad/chain (vlad/present)
+                            (vlad/length-in 6 128)))
+     (vlad/attr ["confirm-password"]
+                (vlad/chain
+                 (vlad/equals-value
+                  password
+                  {:message
+                   "Confirm Password must be same as password"}))))))
+
+[fork/form {:validation
+            #(vlad/field-errors
+              (form-validation (get % "password"))
+              %)
+            ...}
+ ...]`}
+			language="clojure"
+			filename="password-confirm.cljs"
+		/>
+		<p class="text-white/60 mt-4 leading-relaxed">
+			The validation function closes over the current password value from
+			the values map. Vlad's <InlineCode>equals-value</InlineCode> compares
+			the confirm field against it. Every time the values change, Fork
+			re-evaluates the validation function with the latest state.
+		</p>
+	</ContentSection>
+
+	<ContentSection label="Server-Side Validation">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			For validations that require a server round-trip (checking if an email
+			is already taken, verifying a username), use
+			<InlineCode>send-server-request</InlineCode>. This is covered in depth
+			in the <a href={href("/docs/server-requests")} class="text-accent hover:underline">Server Requests</a>
+			guide, but here's the key idea: server errors and client errors coexist.
+			Fork blocks submission while either type has unresolved errors, and
+			while any server request is in a waiting state.
+		</p>
+		<CodeBlock
+			code={`;; In your form component, both error sources are available:
+(fn [{:keys [errors server-errors touched]}]
+  [:div
+   [:input {:name "email" ...}]
+   (when (touched "email")
+     [:div.error
+      (or (get errors "email")
+          (get server-errors "email"))])])`}
+			language="clojure"
+			filename="combined-errors.cljs"
+		/>
+	</ContentSection>
+
+	<ContentSection label="Next Steps">
+		<ul class="space-y-2 text-white/60">
+			<li>
+				<a
+					href={href("/docs/server-requests")}
+					class="text-accent hover:underline">Server Requests</a
+				> &mdash; debounced server-side validation and error injection
+			</li>
+			<li>
+				<a
+					href={href("/docs/field-arrays")}
+					class="text-accent hover:underline">Field Arrays</a
+				> &mdash; dynamic field groups with validation
+			</li>
+			<li>
+				<a
+					href={href("/docs/api")}
+					class="text-accent hover:underline">API Reference</a
+				> &mdash; every handler and option
+			</li>
+		</ul>
+	</ContentSection>
+</DocsPage>

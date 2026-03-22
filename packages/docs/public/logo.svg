@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Input field lines -->
+  <path d="M16 16L44 16" stroke="white" stroke-width="3" stroke-linecap="round" />
+  <path d="M16 32L38 32" stroke="white" stroke-width="3" stroke-linecap="round" />
+
+  <!-- Symmetric arc -->
+  <path d="M32 16C22 24 22 40 32 52" stroke="white" stroke-width="3" stroke-linecap="round" />
+
+  <!-- Field anchor dots -->
+  <circle cx="12" cy="16" r="3" fill="white" />
+  <circle cx="12" cy="32" r="3" fill="white" />
+
+  <!-- Submit point -->
+  <circle cx="32" cy="52" r="5" fill="white" />
+</svg>

@@ -1,0 +1,76 @@
+---
+import HeroSection from "@luciodale/docs-ui-kit/components/HeroSection.astro";
+import PageLayout from "@luciodale/docs-ui-kit/components/PageLayout.astro";
+import { siteConfig } from "../config";
+import Base from "../layouts/Base.astro";
+import { href } from "../lib/link";
+
+export const prerender = true;
+---
+
+<Base title={siteConfig.title} description={siteConfig.description}>
+	<PageLayout config={siteConfig} currentPath="/">
+		<section class="flex flex-col items-center justify-center px-6 py-24 md:py-32 text-center max-w-3xl mx-auto">
+			<div class="flex items-center gap-4 mb-4">
+				<img src={href(siteConfig.logoSrc)} alt={siteConfig.logoAlt ?? siteConfig.title} class="w-12 h-12 md:w-14 md:h-14" />
+				<h1 class="text-4xl md:text-5xl font-bold tracking-tight text-white leading-[1.1]">
+					{siteConfig.title}
+				</h1>
+			</div>
+			<p class="text-lg text-white/50 leading-relaxed max-w-xl mb-10">
+				A form library for Reagent & Re-frame. Handles the form plumbing you don't want to build:
+				{" "}<span class="text-accent font-medium">state orchestration</span>,
+				{" "}<span class="text-blue-400 font-medium">pluggable validation</span>,
+				{" "}<span class="text-green-400 font-medium">field arrays</span>, and
+				{" "}<span class="text-purple-400 font-medium">server request handling</span>.
+				{" "}Your components, your validation, your style.
+			</p>
+			<button
+				type="button"
+				class="copy-btn group rounded-lg border border-white/10 bg-white/5 hover:bg-white/[0.08] px-5 py-3 font-mono text-sm text-white/70 transition-colors cursor-pointer"
+				data-code={siteConfig.installCommand}
+			>
+				<span class="text-accent">;</span>
+				<span class="ml-2">{siteConfig.installCommand}</span>
+				<span class="ml-3 text-white/30 group-hover:text-white/50 transition-colors text-xs copy-label">
+					Copy
+				</span>
+			</button>
+			<div class="mt-12 flex gap-4">
+				<a
+					href={href("/docs/getting-started")}
+					class="rounded-lg bg-accent hover:bg-accent-hover px-5 py-2.5 text-sm font-medium text-white transition-colors"
+				>
+					Get Started
+				</a>
+				<a
+					href={href("/docs/validation")}
+					class="rounded-lg border border-white/10 bg-white/5 hover:bg-white/[0.08] px-5 py-2.5 text-sm font-medium text-white/70 transition-colors"
+				>
+					Examples
+				</a>
+			</div>
+		</section>
+	</PageLayout>
+</Base>
+
+<script>
+	function initCopyButtons() {
+		document.querySelectorAll(".copy-btn").forEach((btn) => {
+			if ((btn as HTMLElement).dataset.initialized) return;
+			(btn as HTMLElement).dataset.initialized = "true";
+			btn.addEventListener("click", async () => {
+				const code = (btn as HTMLElement).dataset.code;
+				if (!code) return;
+				await navigator.clipboard.writeText(code);
+				const label = btn.querySelector(".copy-label");
+				if (label) {
+					label.textContent = "Copied!";
+					setTimeout(() => { label.textContent = "Copy"; }, 2000);
+				}
+			});
+		});
+	}
+	initCopyButtons();
+	document.addEventListener("astro:after-swap", initCopyButtons);
+</script>

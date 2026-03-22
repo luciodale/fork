@@ -6,3 +6,6 @@ pom.xml.asc
 /.lsp
 /.cpcache
 .DS_Store
+node_modules/
+packages/docs/dist/
+bun.lock

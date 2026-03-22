@@ -1,0 +1,238 @@
+---
+import CodeBlock from "@luciodale/docs-ui-kit/components/CodeBlock.astro";
+import ContentSection from "@luciodale/docs-ui-kit/components/ContentSection.astro";
+import InlineCode from "@luciodale/docs-ui-kit/components/InlineCode.astro";
+import Callout from "@luciodale/docs-ui-kit/components/Callout.astro";
+import PropsTable from "@luciodale/docs-ui-kit/components/PropsTable.astro";
+import DocsPage from "../../layouts/DocsPage.astro";
+import { href } from "../../lib/link";
+
+export const prerender = true;
+---
+
+<DocsPage
+	title="Server Requests"
+	description="Server-side validation with debounce, throttle, and waiting state management."
+>
+	<ContentSection label="The Problem">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			Some validations can't run on the client. "Is this email already taken?"
+			requires a server round-trip. You need to debounce the request so you're
+			not hitting the server on every keystroke, track whether a request is
+			still pending, inject server errors into the form state, and prevent
+			submission while the check is in flight. Doing all of this manually
+			for every field that needs server validation is tedious and error-prone.
+		</p>
+		<p class="text-white/60 leading-relaxed">
+			Fork's <InlineCode>send-server-request</InlineCode> handler wraps this
+			entire flow. You configure it per-field, and Fork manages the timing,
+			waiting state, error injection, and submission blocking.
+		</p>
+	</ContentSection>
+
+	<ContentSection label="Basic Server Request">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			Here's a complete example: an email field that checks server-side
+			availability on every change, debounced to 500ms:
+		</p>
+		<CodeBlock
+			code={`(ns app.core
+  (:require
+   [fork.re-frame :as fork]
+   [re-frame.core :as rf]))
+
+(rf/reg-event-fx
+ :check-email
+ (fn [_ [_ {:keys [values errors path state]}]]
+   ;; only check if client-side validation passes
+   (when (empty? (get errors "email"))
+     ;; faking a server request
+     {:dispatch-later
+      [{:ms 1000
+        :dispatch [:email-response path
+                   (get values "email")]}]})))
+
+(rf/reg-event-fx
+ :email-response
+ (fn [{db :db} [_ path email]]
+   {:db
+    (if (= "taken@example.com" email)
+      (-> db
+          (fork/set-error path "email" "Email already taken")
+          (fork/set-waiting path "email" false))
+      (fork/set-waiting path "email" false))}))
+
+(defn email-form []
+  [fork/form {:path :form
+              :prevent-default? true
+              :validation
+              #(cond-> {}
+                 (empty? (get % "email"))
+                 (assoc "email" "Email is required"))
+              :on-submit #(js/alert (:values %))}
+   (fn [{:keys [form-id values errors server-errors
+                handle-change handle-blur handle-submit
+                send-server-request]}]
+     [:form
+      {:id form-id
+       :on-submit handle-submit}
+      [:input
+       {:name "email"
+        :value (values "email")
+        :on-blur handle-blur
+        :on-change
+        (fn [evt]
+          (handle-change evt)
+          (send-server-request
+           {:name "email"
+            :value (fork/retrieve-event-value evt)
+            :set-waiting? true
+            :clean-on-refetch ["email"]
+            :debounce 500}
+           #(rf/dispatch [:check-email %])))}]
+      [:div (or (get errors "email")
+                (get server-errors "email"))]
+      [:button {:type "submit"} "Submit"]])])`}
+			language="clojure"
+			filename="server-request.cljs"
+		/>
+	</ContentSection>
+
+	<ContentSection label="Config Options">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			The first argument to <InlineCode>send-server-request</InlineCode> is
+			a config map:
+		</p>
+		<PropsTable
+			rows={[
+				{
+					name: ":name",
+					type: "string",
+					description:
+						"Required. The field name. Used as a key for internal state tracking (debounce timers, waiting flags).",
+				},
+				{
+					name: ":value",
+					type: "any",
+					description:
+						"The current field value. Use fork/retrieve-event-value to extract it from the DOM event. If omitted, the callback receives the previous value.",
+				},
+				{
+					name: ":evt",
+					type: "keyword",
+					description:
+						"Set to :on-blur to mark the field as touched when the server request fires. Relevant for blur-triggered validations.",
+				},
+				{
+					name: ":set-waiting?",
+					type: "boolean",
+					description:
+						"Defaults to true. When true, sets a waiting flag that prevents form submission until the server responds.",
+				},
+				{
+					name: ":clean-on-refetch",
+					type: "vector",
+					description:
+						"Field names whose server-side state (errors, waiting) should be cleared before each new request. Prevents stale errors from lingering.",
+				},
+				{
+					name: ":debounce",
+					type: "number (ms)",
+					description:
+						"Debounce delay in milliseconds. The callback fires only after the user stops triggering events for this duration. Mutually exclusive with :throttle.",
+				},
+				{
+					name: ":throttle",
+					type: "number (ms)",
+					description:
+						"Throttle interval in milliseconds. The callback fires at most once per interval. Mutually exclusive with :debounce.",
+				},
+			]}
+		/>
+		<p class="text-white/60 mt-4 leading-relaxed">
+			The second argument is a callback function that performs the actual
+			server request. It receives a map with <InlineCode>:state</InlineCode>,
+			<InlineCode>:path</InlineCode>, <InlineCode>:values</InlineCode>,
+			<InlineCode>:touched</InlineCode>, <InlineCode>:errors</InlineCode>,
+			and <InlineCode>:dirty</InlineCode>.
+		</p>
+	</ContentSection>
+
+	<ContentSection label="Resolving the Waiting State">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			When <InlineCode>:set-waiting?</InlineCode> is true, Fork blocks
+			submission until you explicitly clear the waiting flag. After your
+			server logic resolves, call <InlineCode>set-waiting</InlineCode>
+			with <InlineCode>false</InlineCode>:
+		</p>
+		<CodeBlock
+			code={`;; In your response handler:
+(rf/reg-event-fx
+ :email-response
+ (fn [{db :db} [_ path result]]
+   {:db
+    (if (:error result)
+      ;; Set error AND clear waiting
+      (-> db
+          (fork/set-error path "email" (:message result))
+          (fork/set-waiting path "email" false))
+      ;; Just clear waiting (no error)
+      (fork/set-waiting path "email" false))}))`}
+			language="clojure"
+			filename="resolve-waiting.cljs"
+		/>
+		<Callout type="warning" title="Always clear waiting">
+			If you forget to call <InlineCode>set-waiting</InlineCode> with
+			<InlineCode>false</InlineCode> after the server responds, the form
+			will remain blocked and the user cannot submit.
+		</Callout>
+	</ContentSection>
+
+	<ContentSection label="Submission with Server Messages">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			For post-submission server responses (success or failure messages),
+			use <InlineCode>set-server-message</InlineCode>:
+		</p>
+		<CodeBlock
+			code={`(rf/reg-event-fx
+ :submit-success
+ (fn [{db :db} [_ path result]]
+   {:db (-> db
+            (fork/set-submitting path false)
+            (fork/set-server-message path "Saved!"))}))
+
+(rf/reg-event-fx
+ :submit-failure
+ (fn [{db :db} [_ path]]
+   {:db (-> db
+            (fork/set-submitting path false)
+            (fork/set-server-message path "Something went wrong."))}))
+
+;; In the form component:
+(fn [{:keys [on-submit-server-message ...]}]
+  [:div
+   ;; ... form fields ...
+   (when on-submit-server-message
+     [:p.message on-submit-server-message])])`}
+			language="clojure"
+			filename="server-messages.cljs"
+		/>
+	</ContentSection>
+
+	<ContentSection label="Next Steps">
+		<ul class="space-y-2 text-white/60">
+			<li>
+				<a
+					href={href("/docs/validation")}
+					class="text-accent hover:underline">Validation</a
+				> &mdash; client-side validation with any library
+			</li>
+			<li>
+				<a
+					href={href("/docs/api")}
+					class="text-accent hover:underline">API Reference</a
+				> &mdash; every handler and option
+			</li>
+		</ul>
+	</ContentSection>
+</DocsPage>

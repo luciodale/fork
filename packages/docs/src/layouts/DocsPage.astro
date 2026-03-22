@@ -1,0 +1,19 @@
+---
+import DocsLayout from "@luciodale/docs-ui-kit/components/DocsLayout.astro";
+import { siteConfig } from "../config";
+import Base from "./Base.astro";
+
+type Props = {
+	title: string;
+	description?: string;
+};
+
+const { title, description } = Astro.props;
+const currentPath = Astro.url.pathname;
+---
+
+<Base title={title} description={description} type="article">
+	<DocsLayout config={siteConfig} currentPath={currentPath}>
+		<slot />
+	</DocsLayout>
+</Base>
