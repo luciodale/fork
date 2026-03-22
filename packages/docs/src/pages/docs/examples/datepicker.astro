@@ -1,0 +1,146 @@
+---
+import CodeBlock from "@luciodale/docs-ui-kit/components/CodeBlock.astro";
+import ContentSection from "@luciodale/docs-ui-kit/components/ContentSection.astro";
+import InlineCode from "@luciodale/docs-ui-kit/components/InlineCode.astro";
+import Callout from "@luciodale/docs-ui-kit/components/Callout.astro";
+import DocsPage from "../../../layouts/DocsPage.astro";
+import { href } from "../../../lib/link";
+
+export const prerender = true;
+---
+
+<DocsPage
+	title="Datepicker"
+	description="Integrating third-party React components like react-dates with fork."
+>
+	<ContentSection label="React Interop">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			Fork doesn't render anything, which means it works with any component
+			that accepts value and change handler props. This includes JavaScript
+			React components accessed via ClojureScript interop. The pattern is
+			always the same: read the current value from
+			<InlineCode>values</InlineCode>, write updates via
+			<InlineCode>set-values</InlineCode>.
+		</p>
+		<p class="text-white/60 leading-relaxed">
+			This example integrates
+			<a href="https://github.com/react-dates/react-dates" class="text-accent hover:underline">react-dates</a>
+			(both single date and date range pickers) into a Fork form alongside
+			a standard text input. The datepicker components are plain Reagent
+			wrappers around the JavaScript library.
+		</p>
+	</ContentSection>
+
+	<ContentSection label="Single Date Picker">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			The single date picker stores a Moment.js object as the field value.
+			Focus state is managed through Fork's
+			<InlineCode>state</InlineCode> ratom directly, keeping the datepicker's
+			open/closed state alongside the form data:
+		</p>
+		<CodeBlock
+			code={`(defn react-dates-single-date-picker
+  [k {:keys [values state set-values]}]
+  [:> js/ReactDates.SingleDatePicker
+   {:date (get values k)
+    :display-format "DD MMM YYYY"
+    :on-focus-change
+    (fn [e]
+      (swap! state #(assoc-in % [:focus k] (.-focused e))))
+    :focused (get-in @state [:focus k])
+    :on-date-change #(set-values {k %})}])`}
+			language="clojure"
+			filename="datepicker.cljs"
+		/>
+		<p class="text-white/60 mt-4 leading-relaxed">
+			The key insight: <InlineCode>set-values</InlineCode> accepts any value
+			type, not just strings. The Moment.js date object goes straight into
+			Fork's state and comes back out via <InlineCode>values</InlineCode>.
+		</p>
+	</ContentSection>
+
+	<ContentSection label="Date Range Picker">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			The range picker works the same way, except the value is a map with
+			<InlineCode>:startDate</InlineCode> and
+			<InlineCode>:endDate</InlineCode> keys:
+		</p>
+		<CodeBlock
+			code={`(defn react-dates-date-range-picker
+  [k {:keys [values state set-values]}]
+  [:> js/ReactDates.DateRangePicker
+   {:start-date (get-in values [k :startDate])
+    :end-date (get-in values [k :endDate])
+    :display-format "DD MMM YYYY"
+    :on-focus-change
+    (fn [e]
+      (swap! state #(assoc-in % [:focus k] e)))
+    :focused-input (get-in @state [:focus k])
+    :on-dates-change
+    #(set-values {k (js->clj % :keywordize-keys true)})}])`}
+			language="clojure"
+			filename="datepicker.cljs"
+		/>
+	</ContentSection>
+
+	<ContentSection label="Full Form">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			Both datepickers alongside a standard text input in one form.
+			<InlineCode>:keywordize-keys true</InlineCode> is enabled so all
+			field names are keywords, and
+			<InlineCode>normalize-name</InlineCode> converts them for DOM
+			attributes:
+		</p>
+		<CodeBlock
+			code={`(ns examples.datepicker
+  (:require
+   ;; for CSS use:
+   ;; https://unpkg.com/react-dates@16.3.2/lib/css/_datepicker.css
+   [cljsjs.react-dates]
+   [cljs.pprint :as pprint]
+   [fork.reagent :as fork]))
+
+(defn view []
+  [fork/form
+   {:keywordize-keys true
+    :prevent-default? true
+    :on-submit #(js/alert (:values %))
+    :initial-values
+    {:dummy/input "Just an input"
+     :single-date-picker (js/moment)
+     :date-range-picker {:startDate (js/moment)}}}
+   (fn [{:keys [state form-id values normalize-name
+                handle-change handle-blur handle-submit]
+         :as props}]
+     [:div
+      [:pre (with-out-str (pprint/pprint @state))]
+      [:form
+       {:id form-id
+        :on-submit handle-submit}
+       [:div
+        [:label "Dummy input"]
+        [:input
+         {:type "text"
+          :name (normalize-name :dummy/input)
+          :value (:dummy/input values)
+          :on-change handle-change
+          :on-blur handle-blur}]]
+       [:br]
+       [react-dates-single-date-picker
+        :single-date-picker props]
+       [:br]
+       [react-dates-date-range-picker
+        :date-range-picker props]
+       [:br]
+       [:button {:type "submit"} "Submit!"]]])])`}
+			language="clojure"
+			filename="datepicker.cljs"
+		/>
+		<Callout type="tip" title="Any component library">
+			This pattern works with any React component that accepts value/onChange
+			props: date pickers, rich text editors, color pickers, map widgets.
+			Read from <InlineCode>values</InlineCode>, write with
+			<InlineCode>set-values</InlineCode>, and Fork handles the rest.
+		</Callout>
+	</ContentSection>
+</DocsPage>

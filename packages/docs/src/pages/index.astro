@@ -30,8 +30,7 @@ export const prerender = true;
 				class="copy-btn group rounded-lg border border-white/10 bg-white/5 hover:bg-white/[0.08] px-5 py-3 font-mono text-sm text-white/70 transition-colors cursor-pointer"
 				data-code={siteConfig.installCommand}
 			>
-				<span class="text-accent">;</span>
-				<span class="ml-2">{siteConfig.installCommand}</span>
+				<span>{siteConfig.installCommand}</span>
 				<span class="ml-3 text-white/30 group-hover:text-white/50 transition-colors text-xs copy-label">
 					Copy
 				</span>
@@ -44,7 +43,7 @@ export const prerender = true;
 					Get Started
 				</a>
 				<a
-					href={href("/docs/validation")}
+					href={href("/docs/examples/datepicker")}
 					class="rounded-lg border border-white/10 bg-white/5 hover:bg-white/[0.08] px-5 py-2.5 text-sm font-medium text-white/70 transition-colors"
 				>
 					Examples

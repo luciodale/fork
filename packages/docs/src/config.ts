@@ -17,7 +17,7 @@ export const siteConfig: SiteConfig = {
 	},
 	navLinks: [
 		{ href: "/docs/getting-started", label: "Docs" },
-		{ href: "/docs/validation", label: "Examples" },
+		{ href: "/docs/examples/datepicker", label: "Examples" },
 	],
 	sidebarSections: [
 		{
@@ -34,6 +34,20 @@ export const siteConfig: SiteConfig = {
 				{ href: "/docs/validation", label: "Validation" },
 				{ href: "/docs/field-arrays", label: "Field Arrays" },
 				{ href: "/docs/server-requests", label: "Server Requests" },
+			],
+		},
+		{
+			title: "Examples",
+			links: [
+				{ href: "/docs/examples/datepicker", label: "Datepicker" },
+				{
+					href: "/docs/examples/nested-field-arrays",
+					label: "Nested Field Arrays",
+				},
+				{
+					href: "/docs/examples/multi-select",
+					label: "Multi-Select Dropdown",
+				},
 			],
 		},
 	],

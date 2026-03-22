@@ -1,0 +1,93 @@
+---
+import CodeBlock from "@luciodale/docs-ui-kit/components/CodeBlock.astro";
+import ContentSection from "@luciodale/docs-ui-kit/components/ContentSection.astro";
+import InlineCode from "@luciodale/docs-ui-kit/components/InlineCode.astro";
+import Callout from "@luciodale/docs-ui-kit/components/Callout.astro";
+import DocsPage from "../../../layouts/DocsPage.astro";
+import { href } from "../../../lib/link";
+
+export const prerender = true;
+---
+
+<DocsPage
+	title="Multi-Select Dropdown"
+	description="Handling multi-select inputs with set-handle-change."
+>
+	<ContentSection label="What This Demonstrates">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			The standard <InlineCode>handle-change</InlineCode> handler works for
+			inputs that produce a single value: text fields, checkboxes, single
+			selects. But a multi-select <InlineCode>&lt;select multiple&gt;</InlineCode>
+			produces a collection of selected values. For these cases, use
+			<InlineCode>set-handle-change</InlineCode> to programmatically set
+			the value to whatever shape you need.
+		</p>
+	</ContentSection>
+
+	<ContentSection label="The Code">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			The initial value is an empty vector. On each change event, the handler
+			extracts all selected options from the DOM and sets the value as a
+			sequence:
+		</p>
+		<CodeBlock
+			code={`(ns multiple-dropdown
+  (:require
+   [fork.reagent :as fork]))
+
+(defn view []
+  [fork/form {:initial-values {"status" []}}
+   (fn [{:keys [set-handle-change handle-blur values]}]
+     [:form
+      [:select
+       {:multiple true
+        :name "status"
+        :value (values "status")
+        :on-change
+        #(set-handle-change
+          {:value
+           (let [opts (array-seq
+                       (-> % .-target .-options))]
+             (keep (fn [x]
+                     (when (.-selected x)
+                       (.-value x)))
+                   opts))
+           :path ["status"]})
+        :on-blur handle-blur}
+       [:option {:value "married"} "Married"]
+       [:option {:value "single"} "Single"]
+       [:option {:value "pns"} "Prefer Not To Say"]]])])`}
+			language="clojure"
+			filename="multiple_dropdown.cljs"
+		/>
+	</ContentSection>
+
+	<ContentSection label="How It Works">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			<InlineCode>set-handle-change</InlineCode> accepts a map with two keys:
+		</p>
+		<ul class="space-y-2 text-white/60 mb-4">
+			<li>
+				<InlineCode>:value</InlineCode> &mdash; the new value to set. Can be
+				any type (string, number, vector, map). Can also be a function that
+				receives the current value and returns the new one.
+			</li>
+			<li>
+				<InlineCode>:path</InlineCode> &mdash; the path in the values map
+				where the value should be written. A vector, e.g.
+				<InlineCode>["status"]</InlineCode>.
+			</li>
+		</ul>
+		<p class="text-white/60 leading-relaxed">
+			This is the escape hatch for any input that doesn't fit the standard
+			<InlineCode>handle-change</InlineCode> pattern (which reads the name
+			and value from the DOM event). Use it for multi-selects, custom
+			components, drag-and-drop uploads, or any case where you need to
+			compute the value yourself.
+		</p>
+		<Callout type="tip" title="Batch updates">
+			<InlineCode>set-handle-change</InlineCode> also accepts a vector of
+			maps to update multiple fields in a single state transition.
+		</Callout>
+	</ContentSection>
+</DocsPage>
