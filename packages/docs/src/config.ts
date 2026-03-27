@@ -55,6 +55,6 @@ export const siteConfig: SiteConfig = {
 	parentSite: {
 		href: "https://koolcodez.com/projects",
 		label: "koolcodez",
-		logoSrc: "/kool-codez-illustration.svg",
+		logoSrc: "/projects/fork/kool-codez-illustration.svg",
 	},
 };
