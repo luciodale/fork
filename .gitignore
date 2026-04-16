@@ -8,6 +8,5 @@ pom.xml.asc
 .DS_Store
 node_modules/
 packages/docs/dist/
-bun.lock
 # Astro build cache
 packages/docs/.astro/
