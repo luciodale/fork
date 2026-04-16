@@ -5,7 +5,32 @@
 
   [Documentation](https://koolcodez.com/projects/fork) &nbsp;&middot;&nbsp; [Clojars](https://clojars.org/fork) &nbsp;&middot;&nbsp; [GitHub](https://github.com/luciodale/fork)
 
+  [![Clojars Project](https://img.shields.io/clojars/v/fork.svg)](https://clojars.org/fork)
+  [![downloads](https://img.shields.io/clojars/dt/fork.svg)](https://clojars.org/fork)
+  [![license](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
+
 </div>
+
+## The problem
+
+Managing form state, validation timing, field touched and dirty tracking, field arrays, and server side async validation by hand in Reagent and Re-frame is a lot of glue code. You end up writing the same reducer-like state machine on every project, and the "show the error only after blur" logic somehow always has bugs.
+
+Fork centralizes that orchestration so you wire handlers to inputs and get the rest for free.
+
+## Why fork
+
+- **Touched and dirty tracking.** No flash of error on mount or first focus. Errors appear only after a field has actually been interacted with.
+- **Pluggable validation.** Plain functions. Bring Vlad, Malli, Spec, or hand rolled predicates.
+- **Field arrays.** Insert, remove, reorder. Touched state stays correct across mutations.
+- **Async server validation.** Debounced requests, waiting state tracking, double submit blocking.
+- **Reagent and Re-frame.** Same API, switch by changing one require.
+- **Composable helpers.** Side-effect-free accessors for values, errors, touched, dirty, submission state.
+
+## Requirements
+
+- Reagent `>= 1.1.x`
+- Re-frame `>= 1.2.x` (only if you use the Re-frame module)
+- ClojureScript `>= 1.10.x`
 
 ## Install
 

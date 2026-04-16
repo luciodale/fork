@@ -2,7 +2,26 @@
 	"name": "fork-monorepo",
 	"version": "1.0.0",
 	"author": "Lucio D'Alessandro",
-	"description": "Form library for Reagent & Re-frame.",
+	"description": "Headless form management for Re-frame and Reagent. Declarative validation, submission handling, dirty tracking, field arrays, and async server validation for ClojureScript.",
+	"homepage": "https://koolcodez.com/projects/fork",
+	"bugs": {
+		"url": "https://github.com/luciodale/fork/issues"
+	},
+	"keywords": [
+		"clojurescript",
+		"clojure",
+		"cljs",
+		"re-frame",
+		"reagent",
+		"forms",
+		"form-validation",
+		"form-library",
+		"form-management",
+		"headless",
+		"validation",
+		"dirty-tracking",
+		"field-arrays"
+	],
 	"license": "MIT",
 	"private": true,
 	"scripts": {

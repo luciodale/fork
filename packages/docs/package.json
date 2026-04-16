@@ -13,7 +13,7 @@
 		"@astrojs/cloudflare": "^12.0.0",
 		"@astrojs/react": "^4.0.0",
 		"@astrojs/sitemap": "^3.7.1",
-		"@luciodale/docs-ui-kit": "^0.3.4",
+		"@luciodale/docs-ui-kit": "^0.3.5",
 		"@tailwindcss/vite": "^4.1.18",
 		"astro": "^5.0.0",
 		"react": "^19.0.0",
