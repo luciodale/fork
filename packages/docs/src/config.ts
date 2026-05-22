@@ -7,6 +7,7 @@ export const siteConfig: SiteConfig = {
 	siteUrl: "https://koolcodez.com/projects/fork",
 	logoSrc: "/logo.svg",
 	logoAlt: "fork logo",
+	faviconSrc: "/projects/fork/favicon.svg",
 	ogImage: "/og-image.png",
 	installCommand: 'fork {:mvn/version "2.4.3"}',
 	githubUrl: "https://github.com/luciodale/fork",
